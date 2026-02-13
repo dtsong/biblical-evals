@@ -114,6 +114,7 @@ async def readiness_check(
         "checks": checks,
         "version": version,
         "commit": commit,
+        "commit_sha": commit,
     }
 
     status_code = 200 if overall in {"healthy", "degraded"} else 503

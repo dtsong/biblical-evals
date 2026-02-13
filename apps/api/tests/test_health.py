@@ -68,6 +68,7 @@ async def test_readiness_check_healthy(monkeypatch: pytest.MonkeyPatch):
         data = response.json()
         assert data["status"] == "healthy"
         assert data["commit"] == "abc1234"
+        assert data["commit_sha"] == "abc1234"
         assert data["checks"]["database"]["status"] == "ok"
         assert data["checks"]["auth"]["status"] == "ok"
         assert data["checks"]["llm_keys"]["status"] == "ok"

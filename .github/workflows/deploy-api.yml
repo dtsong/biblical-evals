@@ -11,6 +11,10 @@ permissions:
   contents: read
   id-token: write
 
+concurrency:
+  group: deploy-api-${{ github.ref }}
+  cancel-in-progress: false
+
 env:
   # Temporary: hosted in trainerlab-prod while billing quota is resolved.
   # See: https://github.com/dtsong/biblical-evals/issues/2
@@ -87,7 +91,30 @@ jobs:
           workload_identity_provider: projects/${{ secrets.GCP_PROJECT_NUMBER }}/locations/global/workloadIdentityPools/github-biblical-evals/providers/github-oidc
           service_account: gh-biblical-evals@${{ env.PROJECT_ID }}.iam.gserviceaccount.com
 
+      - name: Set up Cloud SDK
+        uses: google-github-actions/setup-gcloud@v2
+
+      - name: Capture previous revision and service URL
+        id: prev
+        run: |
+          set -euo pipefail
+
+          SERVICE_URL=$(gcloud run services describe ${{ env.SERVICE_NAME }} \
+            --region=${{ env.REGION }} \
+            --format='value(status.url)')
+
+          PREV_REVISION=$(gcloud run services describe ${{ env.SERVICE_NAME }} \
+            --region=${{ env.REGION }} \
+            --format="value(status.traffic[?percent=100].revisionName)" | head -n 1)
+
+          echo "service_url=$SERVICE_URL" >> "$GITHUB_OUTPUT"
+          echo "prev_revision=$PREV_REVISION" >> "$GITHUB_OUTPUT"
+
+          echo "Service URL: $SERVICE_URL"
+          echo "Previous revision: ${PREV_REVISION:-<none>}"
+
       - name: Deploy to Cloud Run
+        id: deploy
         uses: google-github-actions/deploy-cloudrun@v2
         with:
           service: ${{ env.SERVICE_NAME }}
@@ -116,3 +143,55 @@ jobs:
 
           echo "Service not healthy after waiting: $READY"
           exit 1
+
+      - name: Smoke test (health ready + commit)
+        run: |
+          set -euo pipefail
+
+          SERVICE_URL="${{ steps.prev.outputs.service_url }}"
+          EXPECT_SHA="${{ needs.build.outputs.short_sha }}"
+
+          if [ -z "$SERVICE_URL" ]; then
+            echo "Missing service URL"
+            exit 1
+          fi
+
+          for i in 1 2 3; do
+            echo "Smoke test attempt $i/3..."
+            HTTP_CODE=$(curl -sS -o ready.json -w "%{http_code}" "$SERVICE_URL/api/v1/health/ready" || true)
+
+            if [ "$HTTP_CODE" = "200" ]; then
+              GOT_SHA=$(python3 -c 'import json; print(json.load(open("ready.json")).get("commit_sha") or json.load(open("ready.json")).get("commit") or "")')
+              STATUS=$(python3 -c 'import json; print(json.load(open("ready.json")).get("status") or "")')
+              echo "health status=$STATUS commit_sha=$GOT_SHA"
+
+              if [ "$GOT_SHA" = "$EXPECT_SHA" ]; then
+                echo "Smoke test passed"
+                exit 0
+              fi
+            else
+              echo "health/ready returned HTTP $HTTP_CODE"
+              cat ready.json || true
+            fi
+
+            sleep 10
+          done
+
+          echo "Smoke test failed"
+          exit 1
+
+      - name: Roll back traffic to previous revision
+        if: ${{ failure() }}
+        run: |
+          set -euo pipefail
+
+          PREV_REVISION="${{ steps.prev.outputs.prev_revision }}"
+          if [ -z "$PREV_REVISION" ]; then
+            echo "No previous revision captured; skipping rollback"
+            exit 0
+          fi
+
+          echo "Rolling back traffic to: $PREV_REVISION"
+          gcloud run services update-traffic ${{ env.SERVICE_NAME }} \
+            --region=${{ env.REGION }} \
+            --to-revisions "$PREV_REVISION=100"
