@@ -64,6 +64,8 @@ class FakeAsyncSession:
             return FakeExecuteResult()
 
         result = self.execute_results.pop(0)
+        if isinstance(result, Exception):
+            raise result
         if isinstance(result, FakeExecuteResult):
             return result
         if isinstance(result, dict):
