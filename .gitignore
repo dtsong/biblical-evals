@@ -30,6 +30,7 @@ Thumbs.db
 .next/
 out/
 build/
+*.tsbuildinfo
 
 # Testing
 .coverage
