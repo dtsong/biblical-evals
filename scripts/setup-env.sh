@@ -3,19 +3,20 @@ set -euo pipefail
 
 # Setup environment variables for biblical-evals.
 #
+# Reads from root .env first, then fills gaps from GCP Secret Manager.
+# Generates .env.local files for both apps/api/ and apps/web/.
+#
 # Usage:
 #   ./scripts/setup-env.sh              # Generate local .env files
 #   ./scripts/setup-env.sh --vercel     # Also push to Vercel
 #
 # Prerequisites:
-#   - gcloud authenticated with access to trainerlab-prod
-#   - gh CLI authenticated (for GitHub secrets)
+#   - Root .env file (copy from .env.example) OR gcloud authenticated
 #   - vercel CLI authenticated (only if --vercel flag used)
 
-PROJECT_ID="trainerlab-prod"
-REGION="us-west1"
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 ROOT_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
+ROOT_ENV="$ROOT_DIR/.env"
 
 # Colors
 RED='\033[0;31m'
@@ -26,6 +27,20 @@ NC='\033[0m'
 info()  { echo -e "${GREEN}[+]${NC} $*"; }
 warn()  { echo -e "${YELLOW}[!]${NC} $*"; }
 error() { echo -e "${RED}[x]${NC} $*" >&2; }
+
+# ---------------------------------------------------------------------------
+# Load root .env if it exists
+# ---------------------------------------------------------------------------
+if [[ -f "$ROOT_ENV" ]]; then
+  info "Loading root .env ..."
+  set -a
+  # shellcheck source=/dev/null
+  source "$ROOT_ENV"
+  set +a
+fi
+
+PROJECT_ID="${GCP_PROJECT_ID:-trainerlab-prod}"
+REGION="${GCP_REGION:-us-west1}"
 
 # ---------------------------------------------------------------------------
 # Fetch secrets from GCP Secret Manager (returns empty string if not found)
@@ -48,6 +63,19 @@ fetch_api_url() {
 }
 
 # ---------------------------------------------------------------------------
+# Resolve a value: use env var if set, otherwise fetch from GCP
+# ---------------------------------------------------------------------------
+resolve() {
+  local env_value="$1"
+  local gcp_secret="$2"
+  if [[ -n "$env_value" ]]; then
+    echo "$env_value"
+  else
+    fetch_secret "$gcp_secret"
+  fi
+}
+
+# ---------------------------------------------------------------------------
 # Main
 # ---------------------------------------------------------------------------
 PUSH_VERCEL=false
@@ -55,21 +83,21 @@ if [[ "${1:-}" == "--vercel" ]]; then
   PUSH_VERCEL=true
 fi
 
-info "Fetching secrets from GCP Secret Manager ($PROJECT_ID)..."
+info "Resolving secrets (root .env → GCP Secret Manager fallback)..."
 
-NEXTAUTH_SECRET=$(fetch_secret "biblical-evals-nextauth-secret")
-OPENAI_API_KEY=$(fetch_secret "biblical-evals-openai-api-key")
-ANTHROPIC_API_KEY=$(fetch_secret "biblical-evals-anthropic-api-key")
-GOOGLE_AI_API_KEY=$(fetch_secret "biblical-evals-google-ai-api-key")
+NEXTAUTH_SECRET=$(resolve "${NEXTAUTH_SECRET:-}" "biblical-evals-nextauth-secret")
+OPENAI_API_KEY=$(resolve "${OPENAI_API_KEY:-}" "biblical-evals-openai-api-key")
+ANTHROPIC_API_KEY=$(resolve "${ANTHROPIC_API_KEY:-}" "biblical-evals-anthropic-api-key")
+GOOGLE_AI_API_KEY=$(resolve "${GOOGLE_AI_API_KEY:-}" "biblical-evals-google-ai-api-key")
 DB_PASSWORD=$(fetch_secret "biblical-evals-db-password")
-API_URL=$(fetch_api_url)
+API_URL="${CLOUD_RUN_API_URL:-$(fetch_api_url)}"
 
 # Fallbacks for local dev
 LOCAL_API_URL="http://localhost:8000"
 LOCAL_WEB_URL="http://localhost:3000"
 LOCAL_DB_URL="postgresql+asyncpg://postgres:postgres@localhost:5432/biblical_evals"
 
-PROD_WEB_URL="https://biblical-evals.vercel.app"
+PROD_WEB_URL="${VERCEL_WEB_URL:-https://biblical-evals.vercel.app}"
 
 # ---------------------------------------------------------------------------
 # Generate apps/api/.env.local
@@ -106,7 +134,7 @@ cat > "$ROOT_DIR/apps/web/.env.local" <<EOF
 NEXTAUTH_SECRET=${NEXTAUTH_SECRET:-dev-secret-change-in-production}
 NEXTAUTH_URL=${LOCAL_WEB_URL}
 
-# Google OAuth (set these after creating credentials in Cloud Console)
+# Google OAuth
 AUTH_GOOGLE_ID=${AUTH_GOOGLE_ID:-}
 AUTH_GOOGLE_SECRET=${AUTH_GOOGLE_SECRET:-}
 
@@ -119,24 +147,15 @@ info "Local .env files written."
 # Report what's set vs missing
 echo ""
 echo "  Secret status:"
-[[ -n "$NEXTAUTH_SECRET" ]]  && info "  NEXTAUTH_SECRET    ✓" || warn "  NEXTAUTH_SECRET    ✗ (using dev fallback)"
-[[ -n "$OPENAI_API_KEY" ]]   && info "  OPENAI_API_KEY     ✓" || warn "  OPENAI_API_KEY     ✗ (empty)"
-[[ -n "$ANTHROPIC_API_KEY" ]]&& info "  ANTHROPIC_API_KEY  ✓" || warn "  ANTHROPIC_API_KEY  ✗ (empty)"
-[[ -n "$GOOGLE_AI_API_KEY" ]]&& info "  GOOGLE_AI_API_KEY  ✓" || warn "  GOOGLE_AI_API_KEY  ✗ (empty)"
-[[ -n "$DB_PASSWORD" ]]      && info "  DB_PASSWORD        ✓ (Cloud SQL)" || warn "  DB_PASSWORD        ✗ (not needed locally)"
-[[ -n "$API_URL" ]]          && info "  Cloud Run URL      ✓ ($API_URL)" || warn "  Cloud Run URL      ✗ (service not deployed yet)"
+[[ -n "$NEXTAUTH_SECRET" ]]  && info "  NEXTAUTH_SECRET    set" || warn "  NEXTAUTH_SECRET    missing (using dev fallback)"
+[[ -n "$OPENAI_API_KEY" ]]   && info "  OPENAI_API_KEY     set" || warn "  OPENAI_API_KEY     missing"
+[[ -n "$ANTHROPIC_API_KEY" ]]&& info "  ANTHROPIC_API_KEY  set" || warn "  ANTHROPIC_API_KEY  missing"
+[[ -n "$GOOGLE_AI_API_KEY" ]]&& info "  GOOGLE_AI_API_KEY  set" || warn "  GOOGLE_AI_API_KEY  missing"
+[[ -n "$DB_PASSWORD" ]]      && info "  DB_PASSWORD        set (Cloud SQL)" || warn "  DB_PASSWORD        missing (not needed locally)"
+[[ -n "${AUTH_GOOGLE_ID:-}" ]]     && info "  AUTH_GOOGLE_ID     set" || warn "  AUTH_GOOGLE_ID     missing"
+[[ -n "${AUTH_GOOGLE_SECRET:-}" ]] && info "  AUTH_GOOGLE_SECRET set" || warn "  AUTH_GOOGLE_SECRET missing"
+[[ -n "$API_URL" ]]          && info "  Cloud Run URL      $API_URL" || warn "  Cloud Run URL      not deployed yet"
 echo ""
-
-# ---------------------------------------------------------------------------
-# Google OAuth reminder
-# ---------------------------------------------------------------------------
-if [[ -z "${AUTH_GOOGLE_ID:-}" ]]; then
-  warn "Google OAuth not configured. To set:"
-  echo "  export AUTH_GOOGLE_ID=your-client-id"
-  echo "  export AUTH_GOOGLE_SECRET=your-client-secret"
-  echo "  Then re-run this script."
-  echo ""
-fi
 
 # ---------------------------------------------------------------------------
 # Push to Vercel
