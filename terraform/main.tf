@@ -209,6 +209,7 @@ module "cloud_run" {
     ENVIRONMENT  = var.environment
     DATABASE_URL = module.cloud_sql.database_url
     CORS_ORIGINS = var.cors_origins
+    ADMIN_EMAILS = var.admin_emails
   }
 
   secret_env_vars = {

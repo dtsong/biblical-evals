@@ -101,3 +101,26 @@ export interface ReportData {
   total_scores: number;
   reviewer_count: number;
 }
+
+export type AccessStatus =
+  | "not_requested"
+  | "pending"
+  | "approved"
+  | "rejected";
+
+export interface AccessUser {
+  id: string;
+  email: string;
+  display_name: string | null;
+  role: string;
+  access_status: AccessStatus;
+  is_admin: boolean;
+  access_requested_at: string | null;
+  access_reviewed_at: string | null;
+  access_reviewed_by: string | null;
+}
+
+export interface AccessRequestList {
+  requested_by: string;
+  users: AccessUser[];
+}

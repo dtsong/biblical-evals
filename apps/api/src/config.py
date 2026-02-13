@@ -40,6 +40,7 @@ class Settings(BaseSettings):
 
     # Auth (NextAuth.js shared secret for JWT verification)
     nextauth_secret: str | None = None
+    admin_emails: str = "xdtsong@gmail.com,daniel@appraisehq.ai"
 
     # CORS (comma-separated list of origins)
     cors_origins: str = "http://localhost:3000"
@@ -56,6 +57,22 @@ class Settings(BaseSettings):
     @property
     def is_production(self) -> bool:
         return self.environment == "production"
+
+    @property
+    def admin_email_set(self) -> set[str]:
+        return {
+            email.strip().lower()
+            for email in self.admin_emails.split(",")
+            if email.strip()
+        }
+
+    @property
+    def primary_admin_email(self) -> str:
+        for email in self.admin_emails.split(","):
+            cleaned = email.strip().lower()
+            if cleaned:
+                return cleaned
+        return "xdtsong@gmail.com"
 
 
 @lru_cache

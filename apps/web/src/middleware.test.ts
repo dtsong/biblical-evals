@@ -13,7 +13,7 @@ describe("middleware auth gating", () => {
       url: "http://localhost/auth/login",
       auth: null,
     };
-    const res = middleware(req as never) as Response;
+    const res = middleware(req as never, {} as never) as Response;
     expect(res.status).toBe(200);
   });
 
@@ -23,7 +23,7 @@ describe("middleware auth gating", () => {
       url: "http://localhost/evaluations",
       auth: null,
     };
-    const res = middleware(req as never) as Response;
+    const res = middleware(req as never, {} as never) as Response;
     expect(res.status).toBe(307);
     expect(res.headers.get("location")).toContain("/auth/login");
     expect(res.headers.get("location")).toContain("callbackUrl=%2Fevaluations");
@@ -35,7 +35,7 @@ describe("middleware auth gating", () => {
       url: "http://localhost/evaluations",
       auth: { user: { id: "u1" } },
     };
-    const res = middleware(req as never) as Response;
+    const res = middleware(req as never, {} as never) as Response;
     expect(res.status).toBe(200);
   });
 });

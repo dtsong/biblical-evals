@@ -3,6 +3,9 @@
  */
 
 import type {
+  AccessRequestList,
+  AccessStatus,
+  AccessUser,
   Evaluation,
   ReviewData,
   ReviewProgress,
@@ -18,10 +21,22 @@ const API_BASE_URL =
 
 class ApiError extends Error {
   status: number;
-  constructor(message: string, status: number) {
+  code?: string;
+  constructor(message: string, status: number, code?: string) {
     super(message);
     this.status = status;
+    this.code = code;
   }
+}
+
+export { ApiError };
+
+export function isAccessPendingError(error: unknown): boolean {
+  return (
+    error instanceof ApiError &&
+    error.status === 403 &&
+    error.code === "ACCESS_PENDING"
+  );
 }
 
 async function getAuthToken(): Promise<string | null> {
@@ -49,7 +64,23 @@ async function fetchApi<T>(
 
   if (!res.ok) {
     const body = await res.json().catch(() => ({}));
-    throw new ApiError(body.detail || res.statusText, res.status);
+    const detail = body?.detail;
+    if (detail && typeof detail === "object") {
+      if (
+        detail.code === "ACCESS_PENDING" &&
+        typeof window !== "undefined" &&
+        !window.location.pathname.startsWith("/access/pending") &&
+        !window.navigator.userAgent.toLowerCase().includes("jsdom")
+      ) {
+        window.location.assign("/access/pending");
+      }
+      throw new ApiError(
+        detail.message || res.statusText,
+        res.status,
+        detail.code
+      );
+    }
+    throw new ApiError(detail || res.statusText, res.status);
   }
 
   return res.json();
@@ -157,5 +188,36 @@ export const configApi = {
   dimensions: () =>
     fetchApiAuth<{ dimensions: ScoringDimension[] }>(
       "/api/v1/config/dimensions"
+    ),
+};
+
+// --- Access ---
+
+export const accessApi = {
+  me: () => fetchApiAuth<AccessUser>("/api/v1/access/me"),
+  request: () =>
+    fetchApiAuth<{ message: string; access_status: AccessStatus }>(
+      "/api/v1/access/request",
+      {
+        method: "POST",
+      }
+    ),
+  list: (accessStatus: AccessStatus | "all" = "pending") =>
+    fetchApiAuth<AccessRequestList>(
+      `/api/v1/access/requests?access_status=${accessStatus}`
+    ),
+  approve: (userId: string) =>
+    fetchApiAuth<{ message: string; user: AccessUser }>(
+      `/api/v1/access/requests/${userId}/approve`,
+      {
+        method: "POST",
+      }
+    ),
+  reject: (userId: string) =>
+    fetchApiAuth<{ message: string; user: AccessUser }>(
+      `/api/v1/access/requests/${userId}/reject`,
+      {
+        method: "POST",
+      }
     ),
 };

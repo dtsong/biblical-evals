@@ -1,6 +1,6 @@
 """Unit tests for config, JWT, scoring, and reporting logic."""
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from types import SimpleNamespace
 from uuid import uuid4
 
@@ -42,6 +42,12 @@ def test_environment_flags():
     assert dev.is_production is False
     assert prod.is_development is False
     assert prod.is_production is True
+
+
+def test_admin_email_settings_helpers():
+    settings = Settings(admin_emails="a@example.com, b@example.com")
+    assert settings.admin_email_set == {"a@example.com", "b@example.com"}
+    assert settings.primary_admin_email == "a@example.com"
 
 
 def test_verify_token_returns_none_on_invalid_token(monkeypatch: pytest.MonkeyPatch):
@@ -138,8 +144,8 @@ async def test_generate_report_data_returns_expected_shape(
         perspective="multi_perspective",
         review_mode="blind",
         model_list=["m1", "m2"],
-        created_at=datetime.now(timezone.utc),
-        updated_at=datetime.now(timezone.utc),
+        created_at=datetime.now(UTC),
+        updated_at=datetime.now(UTC),
     )
 
     async def fake_get_eval(_db, _evaluation_id):

@@ -24,6 +24,18 @@ class User(Base, TimestampMixin):
     role: Mapped[str] = mapped_column(
         String(20), nullable=False, server_default=text("'reviewer'")
     )
+    access_status: Mapped[str] = mapped_column(
+        String(20), nullable=False, server_default=text("'not_requested'")
+    )
+    access_requested_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
+    access_reviewed_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
+    access_reviewed_by: Mapped[UUID | None] = mapped_column(
+        ForeignKey("users.id"), nullable=True, index=True
+    )
     perspective: Mapped[str | None] = mapped_column(String(50), nullable=True)
 
     # Relationships
@@ -56,9 +68,7 @@ class Evaluation(Base, TimestampMixin):
     review_mode: Mapped[str] = mapped_column(
         String(20), nullable=False, server_default=text("'blind'")
     )
-    created_by: Mapped[UUID] = mapped_column(
-        ForeignKey("users.id"), nullable=False
-    )
+    created_by: Mapped[UUID] = mapped_column(ForeignKey("users.id"), nullable=False)
 
     # Relationships
     creator: Mapped["User"] = relationship(back_populates="evaluations")
@@ -77,9 +87,7 @@ class Question(Base):
     type: Mapped[str] = mapped_column(String(20), nullable=False)
     category: Mapped[str] = mapped_column(String(50), nullable=False)
     difficulty: Mapped[str] = mapped_column(String(20), nullable=False)
-    metadata_json: Mapped[dict | None] = mapped_column(
-        "metadata", JSONB, nullable=True
-    )
+    metadata_json: Mapped[dict | None] = mapped_column("metadata", JSONB, nullable=True)
 
     # Relationships
     responses: Mapped[list["Response"]] = relationship(

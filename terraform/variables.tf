@@ -50,3 +50,9 @@ variable "github_repo" {
   type        = string
   default     = "dtsong/biblical-evals"
 }
+
+variable "admin_emails" {
+  description = "Comma-separated admin email allowlist"
+  type        = string
+  default     = "xdtsong@gmail.com,daniel@appraisehq.ai"
+}

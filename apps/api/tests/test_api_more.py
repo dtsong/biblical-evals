@@ -132,7 +132,7 @@ async def test_get_current_user_creates_user_when_missing(
         ),
     )
 
-    user = await auth.get_current_user(SimpleNamespace(), db, "Bearer token")
+    user = await auth.get_authenticated_user(SimpleNamespace(), db, "Bearer token")
     assert user.email == "new@example.com"
     assert db.commits == 1
     assert db.refreshed
@@ -159,7 +159,7 @@ async def test_get_current_user_handles_integrity_error(
         ),
     )
 
-    user = await auth.get_current_user(SimpleNamespace(), db, "Bearer token")
+    user = await auth.get_authenticated_user(SimpleNamespace(), db, "Bearer token")
     assert user is existing
     assert db.rollbacks == 1
 
@@ -172,7 +172,7 @@ async def test_get_current_user_optional(monkeypatch: pytest.MonkeyPatch):
     async def fake_current(_req, _db, _auth):
         return "ok"
 
-    monkeypatch.setattr(auth, "get_current_user", fake_current)
+    monkeypatch.setattr(auth, "get_authenticated_user", fake_current)
     assert (
         await auth.get_current_user_optional(SimpleNamespace(), db, "Bearer t") == "ok"
     )

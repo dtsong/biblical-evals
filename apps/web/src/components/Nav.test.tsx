@@ -1,4 +1,4 @@
-import { fireEvent, render, screen } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import React from "react";
 import { describe, expect, it, vi } from "vitest";
 
@@ -7,6 +7,7 @@ const mocks = vi.hoisted(() => {
     useSession: vi.fn(),
     signIn: vi.fn(),
     signOut: vi.fn(),
+    accessMe: vi.fn(),
   };
 });
 
@@ -24,18 +25,26 @@ vi.mock("next/link", () => ({
   ),
 }));
 
+vi.mock("@/lib/api", () => ({
+  accessApi: {
+    me: mocks.accessMe,
+  },
+}));
+
 import { Nav } from "./Nav";
 
 describe("Nav", () => {
   it("shows sign in button when user is unauthenticated", () => {
     mocks.useSession.mockReturnValue({ data: null });
+    mocks.accessMe.mockResolvedValue({ is_admin: false });
     render(<Nav />);
 
     fireEvent.click(screen.getByRole("button", { name: /sign in/i }));
     expect(mocks.signIn).toHaveBeenCalledWith("google");
   });
 
-  it("shows evaluations link and sign out when authenticated", () => {
+  it("shows evaluations link and sign out when authenticated", async () => {
+    mocks.accessMe.mockResolvedValue({ is_admin: false });
     mocks.useSession.mockReturnValue({
       data: { user: { id: "u1", name: "User" } },
     });
@@ -44,5 +53,18 @@ describe("Nav", () => {
     expect(screen.getByRole("link", { name: /evaluations/i })).toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: /sign out/i }));
     expect(mocks.signOut).toHaveBeenCalled();
+    await waitFor(() => expect(mocks.accessMe).toHaveBeenCalled());
+  });
+
+  it("shows admin link for admin users", async () => {
+    mocks.accessMe.mockResolvedValue({ is_admin: true });
+    mocks.useSession.mockReturnValue({
+      data: { user: { id: "u1", name: "User" } },
+    });
+    render(<Nav />);
+
+    await waitFor(() => {
+      expect(screen.getByRole("link", { name: /admin/i })).toBeInTheDocument();
+    });
   });
 });

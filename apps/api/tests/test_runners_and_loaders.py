@@ -35,7 +35,11 @@ def test_load_all_questions_missing_dir(tmp_path: Path):
 
 def test_load_app_config_with_partial_files(tmp_path: Path):
     (tmp_path / "models.yaml").write_text(
-        "models:\n  - name: gpt-4o\n    provider: openai\n    litellm_model: openai/gpt-4o\n    api_key_env: OPENAI_API_KEY\n"
+        "models:\n"
+        "  - name: gpt-4o\n"
+        "    provider: openai\n"
+        "    litellm_model: openai/gpt-4o\n"
+        "    api_key_env: OPENAI_API_KEY\n"
     )
     cfg = config_loader.load_app_config(tmp_path)
     assert len(cfg.models) == 1

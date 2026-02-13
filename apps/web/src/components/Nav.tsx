@@ -5,8 +5,23 @@ import { useSession, signIn, signOut } from "next-auth/react";
 import Link from "next/link";
 import { BookOpen, LogIn, LogOut } from "lucide-react";
 
+import { accessApi } from "@/lib/api";
+
 export function Nav() {
   const { data: session } = useSession();
+  const [isAdmin, setIsAdmin] = React.useState(false);
+
+  React.useEffect(() => {
+    if (!session) {
+      setIsAdmin(false);
+      return;
+    }
+
+    accessApi
+      .me()
+      .then((me) => setIsAdmin(me.is_admin))
+      .catch(() => setIsAdmin(false));
+  }, [session]);
 
   return (
     <header className="border-b border-border/60 bg-card/80 backdrop-blur-sm sticky top-0 z-50">
@@ -26,12 +41,22 @@ export function Nav() {
 
         <nav className="flex items-center gap-6">
           {session && (
-            <Link
-              href="/evaluations"
-              className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
-            >
-              Evaluations
-            </Link>
+            <>
+              <Link
+                href="/evaluations"
+                className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
+              >
+                Evaluations
+              </Link>
+              {isAdmin && (
+                <Link
+                  href="/admin/access"
+                  className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
+                >
+                  Admin
+                </Link>
+              )}
+            </>
           )}
 
           {session ? (

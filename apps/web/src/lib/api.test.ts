@@ -1,8 +1,10 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import {
+  accessApi,
   configApi,
   evaluationsApi,
+  isAccessPendingError,
   questionsApi,
   reportsApi,
   reviewsApi,
@@ -115,6 +117,43 @@ describe("api client", () => {
     await reportsApi.get("1");
     await configApi.perspectives();
     await configApi.dimensions();
+    await accessApi.me();
+    await accessApi.request();
+    await accessApi.list("pending");
+    await accessApi.approve("u1");
+    await accessApi.reject("u1");
     expect(fetchMock).toHaveBeenCalled();
+  });
+
+  it("maps structured pending-access errors", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async (url: string) => {
+        if (url === "/api/auth/token") {
+          return {
+            ok: true,
+            json: async () => ({ token: "jwt-123" }),
+          };
+        }
+        return {
+          ok: false,
+          status: 403,
+          statusText: "Forbidden",
+          json: async () => ({
+            detail: {
+              code: "ACCESS_PENDING",
+              message: "Account pending approval",
+            },
+          }),
+        };
+      })
+    );
+
+    try {
+      await evaluationsApi.list();
+      throw new Error("expected ACCESS_PENDING error");
+    } catch (error) {
+      expect(isAccessPendingError(error)).toBe(true);
+    }
   });
 });

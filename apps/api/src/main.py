@@ -8,6 +8,7 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
+from src.api.access import router as access_router
 from src.api.config_routes import router as config_router
 from src.api.evaluations import router as evaluations_router
 from src.api.health import router as health_router
@@ -38,17 +39,14 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     if settings.nextauth_secret:
         logger.info("NextAuth.js JWT authentication enabled")
     else:
-        logger.warning(
-            "NEXTAUTH_SECRET not configured - auth endpoints will fail"
-        )
+        logger.warning("NEXTAUTH_SECRET not configured - auth endpoints will fail")
     yield
 
 
 app = FastAPI(
     title="Biblical Evals API",
     description=(
-        "Framework for evaluating LLM responses to "
-        "biblical and theological questions"
+        "Framework for evaluating LLM responses to biblical and theological questions"
     ),
     version="0.0.1",
     docs_url="/docs" if settings.is_development else None,
@@ -73,3 +71,4 @@ app.include_router(responses_router)
 app.include_router(reviews_router)
 app.include_router(reports_router)
 app.include_router(config_router)
+app.include_router(access_router)

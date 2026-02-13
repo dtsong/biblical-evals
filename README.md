@@ -95,7 +95,15 @@ GitHub Actions (`.github/workflows/ci.yml`) enforces:
 
 - `NEXTAUTH_SECRET` must match between web and API for JWT verification.
 - `NEXT_PUBLIC_API_URL` points the frontend to the API base URL.
+- `ADMIN_EMAILS` defines admin allowlist emails (comma-separated) for access approvals.
 - Do not commit `.env*`, coverage outputs, or cache artifacts.
+
+## Closed Beta Access Flow
+
+- Users can sign in with Google, but non-approved users are routed to `/access/pending`.
+- Pending users can submit an access request from that page.
+- Admins can approve/reject users at `/admin/access`.
+- API access is enforced server-side; non-approved users receive `403 ACCESS_PENDING`.
 
 ## Deployment
 

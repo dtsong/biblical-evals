@@ -16,3 +16,6 @@ db_disk_size = 10
 
 # Keep in owner/repo format.
 github_repo  = "dtsong/biblical-evals"
+
+# Initial admin allowlist.
+admin_emails = "xdtsong@gmail.com,daniel@appraisehq.ai"

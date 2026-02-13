@@ -86,6 +86,7 @@ fi
 info "Resolving secrets (root .env → GCP Secret Manager fallback)..."
 
 NEXTAUTH_SECRET=$(resolve "${NEXTAUTH_SECRET:-}" "biblical-evals-nextauth-secret")
+ADMIN_EMAILS="${ADMIN_EMAILS:-xdtsong@gmail.com,daniel@appraisehq.ai}"
 OPENAI_API_KEY=$(resolve "${OPENAI_API_KEY:-}" "biblical-evals-openai-api-key")
 ANTHROPIC_API_KEY=$(resolve "${ANTHROPIC_API_KEY:-}" "biblical-evals-anthropic-api-key")
 GOOGLE_AI_API_KEY=$(resolve "${GOOGLE_AI_API_KEY:-}" "biblical-evals-google-ai-api-key")
@@ -114,6 +115,7 @@ DATABASE_URL=${LOCAL_DB_URL}
 
 # Auth (shared with NextAuth.js)
 NEXTAUTH_SECRET=${NEXTAUTH_SECRET:-dev-secret-change-in-production}
+ADMIN_EMAILS=${ADMIN_EMAILS}
 
 # CORS
 CORS_ORIGINS=${LOCAL_WEB_URL}
