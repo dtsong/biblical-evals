@@ -98,12 +98,21 @@ jobs:
 
       - name: Verify deployment
         run: |
-          SERVING=$(gcloud run services describe ${{ env.SERVICE_NAME }} \
-            --region=${{ env.REGION }} \
-            --format='value(status.conditions[0].status)')
+          set -euo pipefail
 
-          if [ "$SERVING" != "True" ]; then
-            echo "Service not healthy: $SERVING"
-            exit 1
-          fi
-          echo "Deployment verified successfully"
+          for i in {1..12}; do
+            READY=$(gcloud run services describe ${{ env.SERVICE_NAME }} \
+              --region=${{ env.REGION }} \
+              --format="value(status.conditions[?type='Ready'].status)")
+
+            if [ "$READY" = "True" ]; then
+              echo "Deployment verified successfully"
+              exit 0
+            fi
+
+            echo "Service not ready yet (status=$READY). Waiting... ($i/12)"
+            sleep 5
+          done
+
+          echo "Service not healthy after waiting: $READY"
+          exit 1
