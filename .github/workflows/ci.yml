@@ -107,7 +107,12 @@ jobs:
         run: uv sync --frozen
 
       - name: Run tests
-        run: uv run pytest -v
+        run: >-
+          uv run pytest -v
+          --cov=src
+          --cov-report=term-missing
+          --cov-report=xml
+          --cov-fail-under=85
 
   # =============================================================================
   # Web (Next.js) - Lint, Type Check, Build
@@ -136,6 +141,9 @@ jobs:
 
       - name: Type check
         run: pnpm --filter @biblical-evals/web typecheck
+
+      - name: Test with coverage
+        run: pnpm --filter @biblical-evals/web test:coverage
 
       - name: Build
         run: pnpm --filter @biblical-evals/web build
