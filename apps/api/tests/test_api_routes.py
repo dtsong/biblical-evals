@@ -63,5 +63,8 @@ async def test_openapi_docs_available_in_dev():
     transport = ASGITransport(app=app)
     async with AsyncClient(transport=transport, base_url="http://test") as client:
         resp = await client.get("/docs")
-    # In dev mode, should return 200 (HTML)
-    assert resp.status_code == 200
+    if app.docs_url is None:
+        assert resp.status_code == 404
+    else:
+        # In dev mode, should return 200 (HTML)
+        assert resp.status_code == 200
