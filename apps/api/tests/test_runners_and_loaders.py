@@ -1,7 +1,7 @@
 """Tests for runner retry behavior and loader helpers."""
 
 from pathlib import Path
-from types import SimpleNamespace
+from typing import Any, cast
 from uuid import uuid4
 
 import pytest
@@ -9,22 +9,14 @@ import pytest
 from src.loaders import config_loader, question_loader
 from src.runners import litellm_runner
 from src.runners.import_runner import ImportBatch, ImportedResponse, import_responses
-
-
-class FakeDb:
-    def __init__(self):
-        self.added = []
-        self.commits = 0
-        self.refreshed = []
-
-    def add(self, obj):
-        self.added.append(obj)
-
-    async def commit(self):
-        self.commits += 1
-
-    async def refresh(self, obj):
-        self.refreshed.append(obj)
+from tests.conftest import (
+    FakeAsyncSession,
+    FakeLiteLLMChoice,
+    FakeLiteLLMMessage,
+    FakeLiteLLMResponse,
+    FakeLiteLLMUsage,
+    LiteLLMStub,
+)
 
 
 def test_load_all_questions_missing_dir(tmp_path: Path):
@@ -50,7 +42,7 @@ def test_load_app_config_with_partial_files(tmp_path: Path):
 
 @pytest.mark.asyncio
 async def test_import_responses_creates_rows():
-    db = FakeDb()
+    db: Any = FakeAsyncSession()
     batch = ImportBatch(
         responses=[
             ImportedResponse(
@@ -68,68 +60,60 @@ async def test_import_responses_creates_rows():
 
 
 @pytest.mark.asyncio
-async def test_call_model_success_with_metadata(monkeypatch: pytest.MonkeyPatch):
-    class FakeUsage:
-        prompt_tokens = 10
-        completion_tokens = 20
-        total_tokens = 30
-
-    class FakeMessage:
-        content = "result"
-
-    class FakeChoice:
-        message = FakeMessage()
-
-    class FakeResponse:
-        choices = [FakeChoice()]
-        usage = FakeUsage()
-        _hidden_params = {"response_cost": 0.01}
-
-    async def fake_acompletion(**_kwargs):
-        return FakeResponse()
-
-    fake_module = SimpleNamespace(acompletion=fake_acompletion)
-    monkeypatch.setitem(__import__("sys").modules, "litellm", fake_module)
-
-    model_config = SimpleNamespace(
-        name="gpt-4o",
-        provider="openai",
-        litellm_model="openai/gpt-4o",
+async def test_call_model_success_with_metadata(mock_litellm_acompletion: LiteLLMStub):
+    response = FakeLiteLLMResponse(
+        choices=[FakeLiteLLMChoice(message=FakeLiteLLMMessage(content="result"))],
+        usage=FakeLiteLLMUsage(prompt_tokens=10, completion_tokens=20, total_tokens=30),
+        _hidden_params={"response_cost": 0.01},
     )
-    template = SimpleNamespace(template="Q: {question}")
+    mock_litellm_acompletion.set_response("openai/gpt-4o", response)
 
-    result = await litellm_runner.call_model(model_config, "What is grace?", template)
+    model_config = type(
+        "ModelCfg",
+        (),
+        {"name": "gpt-4o", "provider": "openai", "litellm_model": "openai/gpt-4o"},
+    )()
+    template = type("Tpl", (), {"template": "Q: {question}"})()
+
+    result = await litellm_runner.call_model(
+        cast(Any, model_config),
+        "What is grace?",
+        cast(Any, template),
+    )
     assert result["response_text"] == "result"
     assert result["metadata"]["total_tokens"] == 30
     assert result["metadata"]["cost_usd"] == 0.01
 
 
 @pytest.mark.asyncio
-async def test_call_model_retries_and_fails(monkeypatch: pytest.MonkeyPatch):
-    attempts = {"count": 0}
+async def test_call_model_retries_and_fails(
+    monkeypatch: pytest.MonkeyPatch,
+    mock_litellm_failing: LiteLLMStub,
+):
+    import asyncio
 
-    async def fake_acompletion(**_kwargs):
-        attempts["count"] += 1
-        raise RuntimeError("boom")
-
-    async def fake_sleep(_seconds):
+    async def fake_sleep(_seconds: float) -> None:
         return None
 
-    fake_module = SimpleNamespace(acompletion=fake_acompletion)
-    monkeypatch.setitem(__import__("sys").modules, "litellm", fake_module)
-    monkeypatch.setattr("asyncio.sleep", fake_sleep)
+    monkeypatch.setattr(asyncio, "sleep", fake_sleep)
 
-    model_config = SimpleNamespace(
-        name="gpt-4o",
-        provider="openai",
-        litellm_model="openai/gpt-4o",
-    )
-    template = SimpleNamespace(template="Q: {question}")
+    mock_litellm_failing.set_response("openai/gpt-4o", RuntimeError("boom"))
+
+    model_config = type(
+        "ModelCfg",
+        (),
+        {"name": "gpt-4o", "provider": "openai", "litellm_model": "openai/gpt-4o"},
+    )()
+    template = type("Tpl", (), {"template": "Q: {question}"})()
 
     with pytest.raises(RuntimeError, match="failed after"):
-        await litellm_runner.call_model(model_config, "What is grace?", template)
+        await litellm_runner.call_model(
+            cast(Any, model_config),
+            "What is grace?",
+            cast(Any, template),
+        )
 
-    assert attempts["count"] == litellm_runner.MAX_RETRIES
+    assert len(mock_litellm_failing.calls) == litellm_runner.MAX_RETRIES
 
 
 @pytest.mark.asyncio
@@ -141,14 +125,20 @@ async def test_run_evaluation_collects_successful_calls(
 
     monkeypatch.setattr(litellm_runner, "call_model", fake_call_model)
 
-    db = FakeDb()
+    db: Any = FakeAsyncSession()
     results = await litellm_runner.run_evaluation(
         db=db,
         evaluation_id=uuid4(),
         question_ids=["Q1", "Q2"],
         question_texts={"Q1": "text 1", "Q2": "text 2"},
-        model_configs=[SimpleNamespace(name="m1"), SimpleNamespace(name="m2")],
-        prompt_template=SimpleNamespace(template="Q: {question}"),
+        model_configs=cast(
+            Any,
+            [
+                type("MC", (), {"name": "m1"})(),
+                type("MC", (), {"name": "m2"})(),
+            ],
+        ),
+        prompt_template=cast(Any, type("Tpl", (), {"template": "Q: {question}"})()),
     )
 
     assert len(results) == 4

@@ -1,40 +1,13 @@
 """Tests for score aggregation calculations."""
 
 from types import SimpleNamespace
+from typing import Any
 from uuid import uuid4
 
 import pytest
 
 from src.scoring.aggregator import aggregate_scores
-
-
-class FakeScalarResult:
-    def __init__(self, rows):
-        self._rows = rows
-
-    def all(self):
-        return self._rows
-
-
-class FakeExecuteResult:
-    def __init__(self, many):
-        self._many = many
-
-    def scalars(self):
-        return FakeScalarResult(self._many)
-
-
-class FakeDb:
-    def __init__(self, responses, scores):
-        self._responses = responses
-        self._scores = scores
-        self.calls = 0
-
-    async def execute(self, _query):
-        self.calls += 1
-        if self.calls == 1:
-            return FakeExecuteResult(self._responses)
-        return FakeExecuteResult(self._scores)
+from tests.conftest import FakeAsyncSession, FakeExecuteResult
 
 
 @pytest.mark.asyncio
@@ -59,7 +32,13 @@ async def test_aggregate_scores_computes_averages():
         SimpleNamespace(response_id=rid2, user_id=uid2, dimension="accuracy", value=2),
     ]
 
-    report = await aggregate_scores(FakeDb(responses, scores), uuid4())
+    db: Any = FakeAsyncSession(
+        execute_results=[
+            FakeExecuteResult(many=responses),
+            FakeExecuteResult(many=scores),
+        ]
+    )
+    report = await aggregate_scores(db, uuid4())
 
     assert report.total_responses == 2
     assert report.total_scores == 4
@@ -72,7 +51,13 @@ async def test_aggregate_scores_computes_averages():
 
 @pytest.mark.asyncio
 async def test_aggregate_scores_handles_empty_input():
-    report = await aggregate_scores(FakeDb([], []), uuid4())
+    db: Any = FakeAsyncSession(
+        execute_results=[
+            FakeExecuteResult(many=[]),
+            FakeExecuteResult(many=[]),
+        ]
+    )
+    report = await aggregate_scores(db, uuid4())
     assert report.total_responses == 0
     assert report.total_scores == 0
     assert report.model_averages == {}
