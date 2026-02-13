@@ -56,3 +56,31 @@ variable "admin_emails" {
   type        = string
   default     = "xdtsong@gmail.com,daniel@appraisehq.ai"
 }
+
+variable "enable_uptime_alerts" {
+  description = "Enable uptime check alert policy"
+  type        = bool
+  default     = true
+}
+
+variable "uptime_check_path" {
+  description = "HTTP path for uptime checks"
+  type        = string
+  default     = "/api/v1/health/ready"
+}
+
+variable "uptime_check_regions" {
+  description = "Cloud Monitoring uptime check regions"
+  type        = list(string)
+  default = [
+    "USA",
+    "USA_OREGON",
+    "USA_CALIFORNIA",
+  ]
+}
+
+variable "alert_notification_emails" {
+  description = "Email addresses to notify for uptime alerts"
+  type        = list(string)
+  default     = []
+}
