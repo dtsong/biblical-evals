@@ -130,7 +130,8 @@ jobs:
           for i in {1..12}; do
             READY=$(gcloud run services describe ${{ env.SERVICE_NAME }} \
               --region=${{ env.REGION }} \
-              --format="value(status.conditions[?type='Ready'].status)")
+              --format=json | \
+              python3 -c 'import json,sys; d=json.load(sys.stdin); conds=d.get("status",{}).get("conditions",[]); print(next((c.get("status", "") for c in conds if c.get("type")=="Ready"), ""))')
 
             if [ "$READY" = "True" ]; then
               echo "Deployment verified successfully"
