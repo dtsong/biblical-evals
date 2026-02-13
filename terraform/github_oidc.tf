@@ -1,5 +1,5 @@
 # Workload Identity Federation for GitHub Actions
-# Enables keyless authentication from GitHub Actions to GCP
+# Separate pool from trainerlab's "github-actions" to avoid collisions.
 
 data "google_project" "current" {
   project_id = var.project_id
@@ -7,9 +7,9 @@ data "google_project" "current" {
 
 resource "google_iam_workload_identity_pool" "github" {
   project                   = var.project_id
-  workload_identity_pool_id = "github-actions"
-  display_name              = "GitHub Actions"
-  description               = "Workload Identity Pool for GitHub Actions CI/CD"
+  workload_identity_pool_id = "github-biblical-evals"
+  display_name              = "GitHub Actions (Biblical Evals)"
+  description               = "Workload Identity Pool for Biblical Evals CI/CD"
 
   depends_on = [google_project_service.apis]
 }
@@ -18,7 +18,7 @@ resource "google_iam_workload_identity_pool_provider" "github" {
   project                            = var.project_id
   workload_identity_pool_id          = google_iam_workload_identity_pool.github.workload_identity_pool_id
   workload_identity_pool_provider_id = "github-oidc"
-  display_name                       = "GitHub OIDC"
+  display_name                       = "GitHub OIDC (Biblical Evals)"
 
   attribute_mapping = {
     "google.subject"       = "assertion.sub"
@@ -34,11 +34,11 @@ resource "google_iam_workload_identity_pool_provider" "github" {
   }
 }
 
-# Service account for GitHub Actions
+# Separate service account (avoid collision with trainerlab's "github-actions")
 resource "google_service_account" "github_actions" {
   project      = var.project_id
-  account_id   = "github-actions"
-  display_name = "GitHub Actions CI/CD"
+  account_id   = "gh-biblical-evals"
+  display_name = "GitHub Actions CI/CD (Biblical Evals)"
 }
 
 # Allow GitHub Actions to impersonate the service account

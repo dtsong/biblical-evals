@@ -1,3 +1,13 @@
+# Temporary home in trainerlab-prod while billing quota is resolved.
+# See: https://github.com/dtsong/biblical-evals/issues/TBD
+#
+# When migrated to biblical-evals-prod, update:
+#   - backend bucket/prefix
+#   - var.project_id default
+#   - remote_state bucket/prefix
+#   - var.api_image default
+#   - Cloud SQL availability_type to REGIONAL for prod
+
 terraform {
   required_version = ">= 1.5"
 
@@ -13,8 +23,8 @@ terraform {
   }
 
   backend "gcs" {
-    bucket = "biblical-evals-tfstate"
-    prefix = "terraform/state"
+    bucket = "trainerlab-tfstate-1d22e2f5"
+    prefix = "biblical-evals/app"
   }
 }
 
@@ -23,13 +33,13 @@ provider "google" {
   region  = var.region
 }
 
-# --- Remote State: Foundation Network ---
+# --- Remote State: Foundation Network (trainerlab-prod) ---
 
 data "terraform_remote_state" "foundation" {
   backend = "gcs"
   config = {
-    bucket = "my-gcp-foundation-tfstate"
-    prefix = "environments/biblical-evals-prod"
+    bucket = "trainerlab-tfstate-1d22e2f5"
+    prefix = "environments/trainerlab-prod"
   }
 }
 
@@ -38,7 +48,7 @@ locals {
   subnet_id = data.terraform_remote_state.foundation.outputs.cloudrun_subnet_id
 }
 
-# --- Enable APIs ---
+# --- Enable APIs (most already enabled by trainerlab, idempotent) ---
 
 resource "google_project_service" "apis" {
   for_each = toset([
@@ -87,7 +97,7 @@ resource "google_project_iam_member" "api_secrets" {
   member  = "serviceAccount:${google_service_account.api.email}"
 }
 
-# --- Secrets ---
+# --- Secrets (all prefixed with biblical-evals-) ---
 
 resource "random_password" "db_password" {
   length  = 32
@@ -154,7 +164,7 @@ resource "google_secret_manager_secret" "google_ai_api_key" {
   depends_on = [google_project_service.apis]
 }
 
-# --- Cloud SQL ---
+# --- Cloud SQL (separate instance, ZONAL while co-tenant) ---
 
 module "cloud_sql" {
   source = "./modules/cloud_sql"
@@ -168,14 +178,15 @@ module "cloud_sql" {
   database_name     = "biblical_evals"
   app_user_name     = "biblical_evals_app"
   app_user_password = random_password.db_password.result
-  availability_type = var.environment == "prod" ? "REGIONAL" : "ZONAL"
+  availability_type = "ZONAL"
 
-  point_in_time_recovery = var.environment == "prod"
-  backup_retention_days  = var.environment == "prod" ? 14 : 7
+  point_in_time_recovery = false
+  backup_retention_days  = 7
 
   labels = {
     app         = "biblical-evals"
     environment = var.environment
+    temporary   = "true"
   }
 
   depends_on = [google_project_service.apis]

@@ -12,10 +12,12 @@ permissions:
   id-token: write
 
 env:
-  PROJECT_ID: biblical-evals-prod
+  # Temporary: hosted in trainerlab-prod while billing quota is resolved.
+  # See: https://github.com/dtsong/biblical-evals/issues/TBD
+  PROJECT_ID: trainerlab-prod
   REGION: us-west1
   SERVICE_NAME: biblical-evals-api
-  ARTIFACT_REGISTRY: us-west1-docker.pkg.dev/biblical-evals-prod/biblical-evals-api
+  ARTIFACT_REGISTRY: us-west1-docker.pkg.dev/trainerlab-prod/biblical-evals-api
 
 jobs:
   # =============================================================================
@@ -37,8 +39,8 @@ jobs:
       - name: Authenticate to Google Cloud
         uses: google-github-actions/auth@v2
         with:
-          workload_identity_provider: projects/${{ secrets.GCP_PROJECT_NUMBER }}/locations/global/workloadIdentityPools/github-actions/providers/github-oidc
-          service_account: github-actions@${{ env.PROJECT_ID }}.iam.gserviceaccount.com
+          workload_identity_provider: projects/${{ secrets.GCP_PROJECT_NUMBER }}/locations/global/workloadIdentityPools/github-biblical-evals/providers/github-oidc
+          service_account: gh-biblical-evals@${{ env.PROJECT_ID }}.iam.gserviceaccount.com
 
       - name: Set up Cloud SDK
         uses: google-github-actions/setup-gcloud@v2
@@ -82,8 +84,8 @@ jobs:
       - name: Authenticate to Google Cloud
         uses: google-github-actions/auth@v2
         with:
-          workload_identity_provider: projects/${{ secrets.GCP_PROJECT_NUMBER }}/locations/global/workloadIdentityPools/github-actions/providers/github-oidc
-          service_account: github-actions@${{ env.PROJECT_ID }}.iam.gserviceaccount.com
+          workload_identity_provider: projects/${{ secrets.GCP_PROJECT_NUMBER }}/locations/global/workloadIdentityPools/github-biblical-evals/providers/github-oidc
+          service_account: gh-biblical-evals@${{ env.PROJECT_ID }}.iam.gserviceaccount.com
 
       - name: Deploy to Cloud Run
         uses: google-github-actions/deploy-cloudrun@v2
