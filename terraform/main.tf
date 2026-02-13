@@ -1,5 +1,5 @@
 # Temporary home in trainerlab-prod while billing quota is resolved.
-# See: https://github.com/dtsong/biblical-evals/issues/TBD
+# See: https://github.com/dtsong/biblical-evals/issues/2
 #
 # When migrated to biblical-evals-prod, update:
 #   - backend bucket/prefix

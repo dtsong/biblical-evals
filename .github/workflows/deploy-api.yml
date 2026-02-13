@@ -13,7 +13,7 @@ permissions:
 
 env:
   # Temporary: hosted in trainerlab-prod while billing quota is resolved.
-  # See: https://github.com/dtsong/biblical-evals/issues/TBD
+  # See: https://github.com/dtsong/biblical-evals/issues/2
   PROJECT_ID: trainerlab-prod
   REGION: us-west1
   SERVICE_NAME: biblical-evals-api
