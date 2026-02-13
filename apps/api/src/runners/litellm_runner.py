@@ -10,6 +10,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.db.models import Response as ResponseModel
 from src.loaders.config_loader import ModelConfig, PromptTemplate
+from src.observability.context import reset_evaluation_id, set_evaluation_id
 
 logger = logging.getLogger(__name__)
 
@@ -68,10 +69,13 @@ async def call_model(
                     metadata["cost_usd"] = cost
 
             logger.info(
-                "Model %s responded in %.2fs (%s tokens)",
-                model_config.name,
-                latency,
-                metadata.get("total_tokens", "?"),
+                "Model responded",
+                extra={
+                    "model": model_config.name,
+                    "provider": model_config.provider,
+                    "latency_seconds": round(latency, 3),
+                    "total_tokens": metadata.get("total_tokens"),
+                },
             )
             return {
                 "response_text": response_text,
@@ -81,11 +85,14 @@ async def call_model(
         except Exception as e:
             last_error = e
             logger.warning(
-                "Model %s attempt %d/%d failed: %s",
-                model_config.name,
-                attempt,
-                MAX_RETRIES,
-                e,
+                "Model attempt failed",
+                extra={
+                    "model": model_config.name,
+                    "provider": model_config.provider,
+                    "attempt": attempt,
+                    "max_retries": MAX_RETRIES,
+                    "error": str(e),
+                },
             )
             if attempt < MAX_RETRIES:
                 import asyncio
@@ -93,10 +100,13 @@ async def call_model(
                 await asyncio.sleep(RETRY_DELAY_SECONDS * attempt)
 
     logger.error(
-        "Model %s failed after %d attempts: %s",
-        model_config.name,
-        MAX_RETRIES,
-        last_error,
+        "Model failed after retries",
+        extra={
+            "model": model_config.name,
+            "provider": model_config.provider,
+            "max_retries": MAX_RETRIES,
+            "error": str(last_error) if last_error else None,
+        },
     )
     raise RuntimeError(
         f"Model {model_config.name} failed after {MAX_RETRIES} attempts: {last_error}"
@@ -115,6 +125,7 @@ async def run_evaluation(
 
     Returns list of created Response records.
     """
+    tok = set_evaluation_id(str(evaluation_id))
     responses: list[ResponseModel] = []
     total = len(question_ids) * len(model_configs)
     completed = 0
@@ -124,11 +135,13 @@ async def run_evaluation(
         for model_config in model_configs:
             completed += 1
             logger.info(
-                "Running %d/%d: %s on %s",
-                completed,
-                total,
-                model_config.name,
-                question_id,
+                "Running model",
+                extra={
+                    "completed": completed,
+                    "total": total,
+                    "model": model_config.name,
+                    "question_id": question_id,
+                },
             )
 
             try:
@@ -147,19 +160,22 @@ async def run_evaluation(
 
             except RuntimeError:
                 logger.exception(
-                    "Skipping %s for %s after all retries failed",
-                    model_config.name,
-                    question_id,
+                    "Skipping model after retries",
+                    extra={"model": model_config.name, "question_id": question_id},
                 )
 
     await db.commit()
     for r in responses:
         await db.refresh(r)
 
+    reset_evaluation_id(tok)
+
     logger.info(
-        "Evaluation %s: collected %d/%d responses",
-        evaluation_id,
-        len(responses),
-        total,
+        "Evaluation responses collected",
+        extra={
+            "evaluation_id": str(evaluation_id),
+            "responses_collected": len(responses),
+            "total": total,
+        },
     )
     return responses

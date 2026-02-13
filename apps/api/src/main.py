@@ -1,7 +1,6 @@
 """FastAPI application entry point."""
 
 import logging
-import sys
 from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
 
@@ -17,18 +16,12 @@ from src.api.reports import router as reports_router
 from src.api.responses import router as responses_router
 from src.api.reviews import router as reviews_router
 from src.config import get_settings
+from src.observability.logging import configure_logging
+from src.observability.middleware import RequestContextMiddleware
 
 settings = get_settings()
 
-# Configure logging
-logging.basicConfig(
-    level=logging.DEBUG if settings.debug else logging.INFO,
-    stream=sys.stdout,
-    format="%(asctime)s %(levelname)s [%(name)s] %(message)s",
-    datefmt="%Y-%m-%dT%H:%M:%S",
-)
-logging.getLogger("httpx").setLevel(logging.WARNING)
-logging.getLogger("httpcore").setLevel(logging.WARNING)
+configure_logging(settings)
 
 logger = logging.getLogger(__name__)
 
@@ -53,6 +46,9 @@ app = FastAPI(
     redoc_url="/redoc" if settings.is_development else None,
     lifespan=lifespan,
 )
+
+# Request context must be outermost so all downstream logs include ids.
+app.add_middleware(RequestContextMiddleware)
 
 # CORS middleware
 app.add_middleware(

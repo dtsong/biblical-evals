@@ -64,7 +64,10 @@ async def get_authenticated_user(
     try:
         decoded = verify_token(token)
     except TokenVerificationError as e:
-        logger.error("Token verification infrastructure error: %s", e)
+        logger.error(
+            "Token verification infrastructure error",
+            extra={"error": str(e)},
+        )
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
             detail="Authentication service temporarily unavailable",
@@ -113,7 +116,10 @@ async def get_authenticated_user(
             db.add(user)
             await db.commit()
             await db.refresh(user)
-            logger.info("Created new user: %s", decoded.sub)
+            logger.info(
+                "Created new user",
+                extra={"auth_provider_id": decoded.sub, "email": decoded.email},
+            )
         except IntegrityError as e:
             await db.rollback()
             result = await db.execute(query)
