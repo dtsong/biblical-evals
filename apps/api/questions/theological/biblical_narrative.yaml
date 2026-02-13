@@ -1,0 +1,130 @@
+metadata:
+  category: theological
+  subcategory: biblical_narrative
+
+questions:
+  - id: NAR-001
+    text: "Biblically, who is God, and what is His ultimate purpose in creation and redemption?"
+    type: theological
+    difficulty: advanced
+    scripture_references:
+      - "Genesis 1:1"
+      - "Isaiah 43:7"
+      - "Ephesians 1:3-14"
+      - "Revelation 21:1-5"
+      - "Colossians 1:15-20"
+      - "Romans 11:36"
+    evaluation_notes: >
+      Look for God's self-revelation as triune Creator and Redeemer.
+      Should address His attributes (holiness, love, sovereignty) grounded in Scripture.
+      Purpose should connect creation and redemption as unified — God's glory
+      and the restoration of all things under Christ. Watch for whether the model
+      anchors its answer in biblical texts or drifts into generic theism.
+    denominational_sensitivity: medium
+    tags: ["theology_proper", "creation", "redemption", "glory_of_god", "divine_attributes"]
+
+  - id: NAR-002
+    text: "Biblically, what is humanity's original created purpose, and how does the image of God relate to it?"
+    type: theological
+    difficulty: intermediate
+    scripture_references:
+      - "Genesis 1:26-28"
+      - "Genesis 2:7-25"
+      - "Psalm 8:3-8"
+      - "James 3:9"
+      - "Colossians 3:10"
+    evaluation_notes: >
+      Should address the imago Dei as foundational to human identity and purpose —
+      dominion, relationship, and reflecting God's character. Look for whether the
+      model connects image-bearing to vocation, community, and worship.
+      Should not reduce the image to a single faculty (reason, morality, etc.)
+      but present a richer biblical picture.
+    denominational_sensitivity: low
+    tags: ["anthropology", "imago_dei", "creation_mandate", "human_dignity"]
+
+  - id: NAR-003
+    text: "Biblically, what happened to humanity through the fall, and what does that mean for us today?"
+    type: theological
+    difficulty: intermediate
+    scripture_references:
+      - "Genesis 3:1-24"
+      - "Romans 5:12-21"
+      - "Romans 3:10-23"
+      - "Ephesians 2:1-3"
+      - "Genesis 6:5"
+    evaluation_notes: >
+      Should cover the historicity and theological significance of the fall —
+      not just moral failure but corruption of the whole person (total depravity
+      in the Reformed sense, or universal sinfulness more broadly). Look for
+      connection between Adam's sin and its effects on all humanity (original sin).
+      Should address present-day implications: spiritual death, broken relationships,
+      inability to save oneself. Watch for whether the model softens or avoids
+      the gravity of sin.
+    denominational_sensitivity: medium
+    tags: ["hamartiology", "fall", "original_sin", "total_depravity", "adam"]
+
+  - id: NAR-004
+    text: "Biblically, what did Christ accomplish for sinners like you and me?"
+    type: theological
+    difficulty: advanced
+    scripture_references:
+      - "Romans 3:21-26"
+      - "2 Corinthians 5:21"
+      - "1 Peter 2:24"
+      - "Hebrews 9:11-14"
+      - "Colossians 2:13-15"
+      - "Isaiah 53:4-6"
+      - "John 3:16"
+    evaluation_notes: >
+      Look for a robust account of the atonement — penal substitution, propitiation,
+      and reconciliation at minimum. Should address Christ's active and passive obedience,
+      the cross as both God's justice and mercy. Watch for whether the model presents
+      atonement theories (Christus Victor, moral influence, ransom) as complementary
+      facets or as alternatives that undermine substitutionary atonement. The personal
+      framing ("sinners like you and me") should prompt a model to engage with the
+      question personally, not just academically.
+    denominational_sensitivity: medium
+    tags: ["soteriology", "atonement", "cross", "substitution", "propitiation", "reconciliation"]
+
+  - id: NAR-005
+    text: "Biblically, what does it mean that believers have been adopted as co-heirs with Christ?"
+    type: theological
+    difficulty: advanced
+    scripture_references:
+      - "Romans 8:14-17"
+      - "Galatians 4:4-7"
+      - "Ephesians 1:5"
+      - "1 John 3:1-3"
+      - "Romans 8:28-30"
+      - "John 1:12-13"
+    evaluation_notes: >
+      Should explain adoption as a distinct soteriological blessing — not just forgiveness
+      but a new familial status with full inheritance rights. Look for connection to
+      the Spirit's work (Abba, Father), union with Christ as the basis for co-heir status,
+      and the eschatological dimension (future glory, resurrection). Should distinguish
+      adoption from justification and sanctification while showing their interconnection.
+      Watch for whether the model grasps the legal and relational dimensions together.
+    denominational_sensitivity: low
+    tags: ["adoption", "co-heirs", "union_with_christ", "inheritance", "holy_spirit"]
+
+  - id: NAR-006
+    text: "Biblically, how should a believer live in this world?"
+    type: theological
+    difficulty: intermediate
+    scripture_references:
+      - "Romans 12:1-2"
+      - "Galatians 5:16-25"
+      - "Colossians 3:1-17"
+      - "Matthew 5:13-16"
+      - "Micah 6:8"
+      - "1 Peter 2:9-12"
+      - "Titus 2:11-14"
+    evaluation_notes: >
+      Should ground Christian living in the indicative (what God has done) before the
+      imperative (what we should do). Look for the role of the Holy Spirit in
+      sanctification, the already/not-yet tension, and practical fruit (love, holiness,
+      mission, justice). Should address the believer's relationship to the world —
+      in it but not of it, salt and light. Watch for whether the model reduces
+      Christian living to moralism or disconnects it from gospel motivation.
+    denominational_sensitivity: low
+    tags: ["sanctification", "christian_living", "holy_spirit", "fruit_of_spirit", "mission"]
