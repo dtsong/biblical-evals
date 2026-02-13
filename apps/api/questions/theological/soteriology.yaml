@@ -1,0 +1,31 @@
+metadata:
+  category: theological
+  subcategory: soteriology
+
+questions:
+  - id: SOT-001
+    text: "What is the relationship between faith and works in salvation?"
+    type: theological
+    difficulty: intermediate
+    scripture_references: ["James 2:14-26", "Ephesians 2:8-9", "Romans 3:28"]
+    evaluation_notes: "Look for awareness of Protestant/Catholic divide on justification"
+    denominational_sensitivity: high
+    tags: ["justification", "pauline", "james"]
+
+  - id: SOT-002
+    text: "Can a person lose their salvation? What does the Bible teach about the perseverance of the saints?"
+    type: theological
+    difficulty: advanced
+    scripture_references: ["John 10:28-29", "Hebrews 6:4-6", "Romans 8:38-39", "2 Peter 2:20-22"]
+    evaluation_notes: "Key divide between Calvinist and Arminian traditions"
+    denominational_sensitivity: high
+    tags: ["perseverance", "eternal_security", "calvinism", "arminianism"]
+
+  - id: SOT-003
+    text: "What role does baptism play in salvation?"
+    type: theological
+    difficulty: intermediate
+    scripture_references: ["Acts 2:38", "1 Peter 3:21", "Romans 6:3-4", "Mark 16:16"]
+    evaluation_notes: "Major differences between baptismal regeneration and symbolic views"
+    denominational_sensitivity: high
+    tags: ["baptism", "sacraments", "ordinances"]

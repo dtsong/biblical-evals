@@ -1,0 +1,91 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@import url('https://fonts.googleapis.com/css2?family=Crimson+Pro:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400;1,500&family=Source+Sans+3:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&display=swap');
+
+@layer base {
+  :root {
+    --font-display: 'Crimson Pro', Georgia, serif;
+    --font-body: 'Source Sans 3', system-ui, sans-serif;
+
+    --background: 36 33% 97%;
+    --foreground: 24 10% 15%;
+    --card: 36 33% 99%;
+    --card-foreground: 24 10% 15%;
+    --primary: 24 70% 35%;
+    --primary-foreground: 36 33% 97%;
+    --secondary: 36 20% 92%;
+    --secondary-foreground: 24 10% 25%;
+    --muted: 36 15% 93%;
+    --muted-foreground: 24 5% 50%;
+    --accent: 36 40% 88%;
+    --accent-foreground: 24 10% 15%;
+    --destructive: 0 65% 48%;
+    --destructive-foreground: 36 33% 97%;
+    --border: 30 15% 85%;
+    --input: 30 15% 85%;
+    --ring: 24 70% 35%;
+    --radius: 0.375rem;
+
+    /* Scoring colors */
+    --score-1: 0 72% 51%;
+    --score-2: 25 95% 53%;
+    --score-3: 45 93% 47%;
+    --score-4: 142 71% 45%;
+    --score-5: 142 76% 36%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+    font-family: var(--font-body);
+  }
+  h1, h2, h3, h4 {
+    font-family: var(--font-display);
+  }
+}
+
+/* Parchment texture overlay */
+.parchment-bg {
+  background-image:
+    radial-gradient(ellipse at 20% 50%, hsl(36 33% 95% / 0.8), transparent 70%),
+    radial-gradient(ellipse at 80% 20%, hsl(30 40% 92% / 0.6), transparent 60%);
+}
+
+/* Score indicator colors */
+.score-1 { color: hsl(var(--score-1)); }
+.score-2 { color: hsl(var(--score-2)); }
+.score-3 { color: hsl(var(--score-3)); }
+.score-4 { color: hsl(var(--score-4)); }
+.score-5 { color: hsl(var(--score-5)); }
+
+.score-bg-1 { background-color: hsl(var(--score-1)); }
+.score-bg-2 { background-color: hsl(var(--score-2)); }
+.score-bg-3 { background-color: hsl(var(--score-3)); }
+.score-bg-4 { background-color: hsl(var(--score-4)); }
+.score-bg-5 { background-color: hsl(var(--score-5)); }
+
+/* Fade-in animation */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-in-up {
+  animation: fadeInUp 0.5s ease-out both;
+}
+
+.animate-delay-1 { animation-delay: 0.1s; }
+.animate-delay-2 { animation-delay: 0.2s; }
+.animate-delay-3 { animation-delay: 0.3s; }

@@ -1,0 +1,25 @@
+models:
+  - name: gpt-4o
+    provider: openai
+    litellm_model: gpt-4o
+    api_key_env: OPENAI_API_KEY
+
+  - name: gpt-4o-mini
+    provider: openai
+    litellm_model: gpt-4o-mini
+    api_key_env: OPENAI_API_KEY
+
+  - name: claude-sonnet-4-5
+    provider: anthropic
+    litellm_model: claude-sonnet-4-5-20250929
+    api_key_env: ANTHROPIC_API_KEY
+
+  - name: claude-haiku-3.5
+    provider: anthropic
+    litellm_model: claude-haiku-4-5-20251001
+    api_key_env: ANTHROPIC_API_KEY
+
+  - name: gemini-2.0-flash
+    provider: google
+    litellm_model: gemini/gemini-2.0-flash
+    api_key_env: GOOGLE_API_KEY

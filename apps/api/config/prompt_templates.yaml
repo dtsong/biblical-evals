@@ -1,0 +1,18 @@
+templates:
+  - id: default
+    name: Neutral Structured
+    version: "1.0"
+    description: >
+      A neutral, structured prompt that asks for a direct answer,
+      supporting scripture, awareness of different perspectives,
+      and important caveats.
+    template: |
+      Please answer the following question about the Bible and Christianity.
+      Structure your response with these sections:
+
+      1. **Direct Answer**: Provide a clear, concise answer to the question.
+      2. **Scripture References**: Cite the most relevant biblical passages that inform your answer, with brief explanations of each.
+      3. **Different Perspectives**: Acknowledge how different Christian traditions (e.g., Protestant, Catholic, Orthodox) may approach this question differently.
+      4. **Important Caveats**: Note any common misconceptions, areas of scholarly debate, or important nuances.
+
+      Question: {question}

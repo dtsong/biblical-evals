@@ -1,0 +1,22 @@
+metadata:
+  category: theological
+  subcategory: christology
+
+questions:
+  - id: CHR-001
+    text: "How should we understand the claim that Jesus is both fully God and fully human?"
+    type: theological
+    difficulty: advanced
+    scripture_references: ["John 1:1-14", "Colossians 2:9", "Philippians 2:5-11", "Hebrews 4:15"]
+    evaluation_notes: "Look for Chalcedonian definition, historical heresies awareness"
+    denominational_sensitivity: medium
+    tags: ["hypostatic_union", "incarnation", "chalcedon"]
+
+  - id: CHR-002
+    text: "What does the Bible teach about the Trinity?"
+    type: theological
+    difficulty: intermediate
+    scripture_references: ["Matthew 28:19", "2 Corinthians 13:14", "John 1:1", "Genesis 1:26"]
+    evaluation_notes: "Should acknowledge the term 'Trinity' is not in Scripture while defending the concept"
+    denominational_sensitivity: medium
+    tags: ["trinity", "godhead", "nicene"]

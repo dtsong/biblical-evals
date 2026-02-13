@@ -1,0 +1,31 @@
+metadata:
+  category: interpretive
+  subcategory: ethics
+
+questions:
+  - id: ETH-001
+    text: "How should Christians interpret Old Testament laws that seem morally troubling, such as commands involving violence or slavery?"
+    type: interpretive
+    difficulty: advanced
+    scripture_references: ["Deuteronomy 20:16-18", "Leviticus 25:44-46", "Matthew 5:17-20"]
+    evaluation_notes: "Look for hermeneutical sophistication — dispensational, covenantal, or progressive approaches"
+    denominational_sensitivity: medium
+    tags: ["old_testament", "hermeneutics", "ethics", "violence"]
+
+  - id: ETH-002
+    text: "What does the Bible teach about the role of women in church leadership?"
+    type: interpretive
+    difficulty: intermediate
+    scripture_references: ["1 Timothy 2:11-12", "Galatians 3:28", "Romans 16:1-7", "Judges 4-5"]
+    evaluation_notes: "Should present both complementarian and egalitarian positions charitably"
+    denominational_sensitivity: high
+    tags: ["women_in_ministry", "complementarian", "egalitarian"]
+
+  - id: ETH-003
+    text: "How do different Christian traditions approach the question of predestination versus free will?"
+    type: interpretive
+    difficulty: advanced
+    scripture_references: ["Romans 9:10-24", "Ephesians 1:4-5", "2 Peter 3:9", "Joshua 24:15"]
+    evaluation_notes: "Should cover Calvinist, Arminian, Molinist, and Open Theist positions"
+    denominational_sensitivity: high
+    tags: ["predestination", "free_will", "calvinism", "arminianism", "molinism"]

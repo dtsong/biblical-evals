@@ -1,0 +1,29 @@
+perspectives:
+  - id: orthodox_evangelical
+    name: Orthodox Evangelical
+    description: >
+      Evaluates responses from the perspective of mainstream evangelical
+      Protestant theology, emphasizing biblical authority, substitutionary
+      atonement, justification by faith alone, and the historical-grammatical
+      hermeneutic.
+
+  - id: roman_catholic
+    name: Roman Catholic
+    description: >
+      Evaluates responses from the perspective of Roman Catholic theology,
+      emphasizing Sacred Tradition alongside Scripture, the Magisterium,
+      sacramental theology, and the role of the Church in salvation.
+
+  - id: multi_perspective
+    name: Multi-Perspective
+    description: >
+      Evaluates whether responses acknowledge and fairly represent multiple
+      Christian traditions without privileging one over others. Looks for
+      awareness of denominational differences and charitable engagement.
+
+  - id: neutral_academic
+    name: Neutral Academic
+    description: >
+      Evaluates responses from a scholarly/academic perspective, prioritizing
+      historical-critical method, awareness of scholarly consensus, and
+      engagement with primary sources regardless of confessional commitment.

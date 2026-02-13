@@ -1,0 +1,18 @@
+{
+  "name": "biblical-evals",
+  "version": "0.0.1",
+  "private": true,
+  "description": "Framework for evaluating LLM responses to biblical and theological questions",
+  "scripts": {
+    "dev": "pnpm --filter @biblical-evals/web dev",
+    "build": "pnpm --filter @biblical-evals/web build",
+    "lint": "pnpm -r lint",
+    "typecheck": "pnpm -r typecheck",
+    "clean": "pnpm -r clean"
+  },
+  "engines": {
+    "node": ">=18",
+    "pnpm": ">=8"
+  },
+  "packageManager": "pnpm@10.15.0"
+}

@@ -1,0 +1,43 @@
+dimensions:
+  - name: factual_accuracy
+    label: Factual Accuracy
+    description: >
+      Are the biblical references, historical claims, and attributed quotes
+      correct? Does the response avoid hallucinating verses or misattributing
+      theological positions?
+    min_value: 1
+    max_value: 5
+
+  - name: biblical_fidelity
+    label: Biblical Fidelity
+    description: >
+      Does the response faithfully represent what the cited biblical texts
+      actually say? Does it avoid proof-texting or taking passages out of
+      context?
+    min_value: 1
+    max_value: 5
+
+  - name: theological_nuance
+    label: Theological Nuance
+    description: >
+      Does the response demonstrate awareness of theological complexity?
+      Does it acknowledge different interpretive traditions and avoid
+      oversimplification?
+    min_value: 1
+    max_value: 5
+
+  - name: completeness
+    label: Completeness
+    description: >
+      Does the response adequately address the question? Does it cover
+      the key relevant passages, perspectives, and considerations?
+    min_value: 1
+    max_value: 5
+
+  - name: denominational_alignment
+    label: Denominational Alignment
+    description: >
+      How well does the response align with the evaluator's theological
+      perspective? This is intentionally subjective and perspective-dependent.
+    min_value: 1
+    max_value: 5

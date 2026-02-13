@@ -1,0 +1,40 @@
+metadata:
+  category: factual
+  subcategory: biblical_knowledge
+
+questions:
+  - id: BIB-001
+    text: "How many books are in the Bible, and how is this different across Christian traditions?"
+    type: factual
+    difficulty: easy
+    scripture_references: []
+    evaluation_notes: "Should mention Protestant (66), Catholic (73), and Orthodox (varies) canons"
+    denominational_sensitivity: medium
+    tags: ["canon", "deuterocanonical", "apocrypha"]
+
+  - id: BIB-002
+    text: "Who wrote the Pentateuch, and what is the scholarly consensus on its authorship?"
+    type: factual
+    difficulty: intermediate
+    scripture_references: ["Deuteronomy 31:9", "John 5:46-47"]
+    evaluation_notes: "Should mention traditional Mosaic authorship AND Documentary Hypothesis (JEDP)"
+    denominational_sensitivity: medium
+    tags: ["pentateuch", "moses", "documentary_hypothesis"]
+
+  - id: BIB-003
+    text: "What are the Dead Sea Scrolls and why are they significant for biblical studies?"
+    type: factual
+    difficulty: easy
+    scripture_references: []
+    evaluation_notes: "Should mention Qumran, dating, textual confirmation of Old Testament accuracy"
+    denominational_sensitivity: low
+    tags: ["dead_sea_scrolls", "qumran", "textual_criticism"]
+
+  - id: BIB-004
+    text: "What are the major differences between the Synoptic Gospels and the Gospel of John?"
+    type: factual
+    difficulty: intermediate
+    scripture_references: []
+    evaluation_notes: "Should cover theological emphasis, chronology, unique material, literary style"
+    denominational_sensitivity: low
+    tags: ["gospels", "synoptic", "johannine"]
