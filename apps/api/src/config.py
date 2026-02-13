@@ -49,6 +49,13 @@ class Settings(BaseSettings):
     openai_api_key: str | None = None
     anthropic_api_key: str | None = None
     google_api_key: str | None = None
+    google_ai_api_key: str | None = None
+
+    @property
+    def effective_google_api_key(self) -> str | None:
+        """Return the canonical Google key, falling back to legacy name."""
+
+        return self.google_ai_api_key or self.google_api_key
 
     @property
     def is_development(self) -> bool:

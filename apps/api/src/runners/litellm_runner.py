@@ -1,7 +1,9 @@
 """LiteLLM runner for calling LLM APIs and collecting responses."""
 
 import logging
+import os
 import time
+from typing import Any, cast
 from uuid import UUID, uuid4
 
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -25,6 +27,11 @@ async def call_model(
     Returns a dict with response_text and metadata (tokens, cost, latency).
     Retries up to MAX_RETRIES times on transient failures.
     """
+    # Canonical Google key is GOOGLE_AI_API_KEY, but some providers/libraries still
+    # look for GOOGLE_API_KEY. Preserve compatibility at call time.
+    if not os.getenv("GOOGLE_API_KEY") and os.getenv("GOOGLE_AI_API_KEY"):
+        os.environ["GOOGLE_API_KEY"] = os.environ["GOOGLE_AI_API_KEY"]
+
     import litellm
 
     prompt = prompt_template.template.replace("{question}", question_text)
@@ -41,8 +48,9 @@ async def call_model(
             )
             latency = time.time() - start_time
 
-            response_text = response.choices[0].message.content or ""
-            usage = response.usage
+            resp = cast(Any, response)
+            response_text = resp.choices[0].message.content or ""
+            usage = getattr(resp, "usage", None)
 
             metadata = {
                 "model": model_config.litellm_model,
@@ -54,8 +62,8 @@ async def call_model(
             }
 
             # LiteLLM provides cost tracking
-            if hasattr(response, "_hidden_params"):
-                cost = response._hidden_params.get("response_cost")
+            if hasattr(resp, "_hidden_params"):
+                cost = resp._hidden_params.get("response_cost")
                 if cost is not None:
                     metadata["cost_usd"] = cost
 

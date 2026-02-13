@@ -22,4 +22,4 @@ models:
   - name: gemini-2.0-flash
     provider: google
     litellm_model: gemini/gemini-2.0-flash
-    api_key_env: GOOGLE_API_KEY
+    api_key_env: GOOGLE_AI_API_KEY
