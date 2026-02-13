@@ -14,6 +14,7 @@ It includes:
 - `apps/web`: Next.js 14 app, Auth.js login, API client, UI and tests.
 - `terraform`: infrastructure modules (Cloud Run, Cloud SQL, IAM/OIDC).
 - `scripts/setup-env.sh`: helper to generate local `.env.local` files (optionally push Vercel env vars).
+- See `docs/architecture-diagrams.md` for Mermaid diagrams across runtime, infra, and delivery.
 
 ## Prerequisites
 
@@ -82,6 +83,21 @@ Web (`apps/web`):
 - Lint: `source ~/.nvm/nvm.sh && nvm use default --silent && pnpm lint`
 - Typecheck: `source ~/.nvm/nvm.sh && nvm use default --silent && pnpm typecheck`
 - Tests + coverage: `source ~/.nvm/nvm.sh && nvm use default --silent && pnpm test:coverage`
+
+## Git Hooks (Pre-Commit)
+
+Install and enable hooks once per clone:
+
+```bash
+uv tool install pre-commit
+pre-commit install
+pre-commit install --hook-type pre-push
+```
+
+Hook behavior:
+
+- `pre-commit`: API ruff lint/format check + web lint/typecheck (+ basic file hygiene checks)
+- `pre-push`: API tests with coverage gate (85%), web tests with coverage, web production build, terraform fmt/validate (when relevant files changed)
 
 ## CI Gates
 

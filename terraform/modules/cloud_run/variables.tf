@@ -73,4 +73,3 @@ variable "allow_unauthenticated" {
   type        = bool
   default     = true
 }
-
