@@ -34,8 +34,8 @@ data "terraform_remote_state" "foundation" {
 }
 
 locals {
-  vpc_id    = data.terraform_remote_state.foundation.outputs.vpc_id
-  subnet_id = data.terraform_remote_state.foundation.outputs.subnet_id
+  vpc_id    = data.terraform_remote_state.foundation.outputs.network_self_link
+  subnet_id = data.terraform_remote_state.foundation.outputs.cloudrun_subnet_id
 }
 
 # --- Enable APIs ---
