@@ -20,18 +20,16 @@ async def test_all_routes_registered():
         "/api/v1/config",
     ]
     for prefix in expected_prefixes:
-        assert any(
-            r.startswith(prefix) for r in routes
-        ), f"Missing route prefix: {prefix}"
+        assert any(r.startswith(prefix) for r in routes), (
+            f"Missing route prefix: {prefix}"
+        )
 
 
 @pytest.mark.asyncio
 async def test_protected_routes_require_auth():
     """Protected endpoints return 401 without auth."""
     transport = ASGITransport(app=app)
-    async with AsyncClient(
-        transport=transport, base_url="http://test"
-    ) as client:
+    async with AsyncClient(transport=transport, base_url="http://test") as client:
         endpoints = [
             ("GET", "/api/v1/questions"),
             ("GET", "/api/v1/evaluations"),
@@ -46,8 +44,7 @@ async def test_protected_routes_require_auth():
             else:
                 resp = await client.post(path, json={})
             assert resp.status_code == 401, (
-                f"{method} {path} should require auth, "
-                f"got {resp.status_code}"
+                f"{method} {path} should require auth, got {resp.status_code}"
             )
 
 
@@ -55,9 +52,7 @@ async def test_protected_routes_require_auth():
 async def test_health_no_auth_required():
     """Health endpoint should not require authentication."""
     transport = ASGITransport(app=app)
-    async with AsyncClient(
-        transport=transport, base_url="http://test"
-    ) as client:
+    async with AsyncClient(transport=transport, base_url="http://test") as client:
         resp = await client.get("/api/v1/health")
     assert resp.status_code == 200
 
@@ -66,9 +61,7 @@ async def test_health_no_auth_required():
 async def test_openapi_docs_available_in_dev():
     """OpenAPI docs should be available in development."""
     transport = ASGITransport(app=app)
-    async with AsyncClient(
-        transport=transport, base_url="http://test"
-    ) as client:
+    async with AsyncClient(transport=transport, base_url="http://test") as client:
         resp = await client.get("/docs")
     # In dev mode, should return 200 (HTML)
     assert resp.status_code == 200

@@ -18,25 +18,19 @@ async def get_user_by_auth_id(db: AsyncSession, auth_provider_id: str) -> User |
 
 async def get_evaluation(db: AsyncSession, evaluation_id: UUID) -> Evaluation | None:
     """Get an evaluation by ID."""
-    result = await db.execute(
-        select(Evaluation).where(Evaluation.id == evaluation_id)
-    )
+    result = await db.execute(select(Evaluation).where(Evaluation.id == evaluation_id))
     return result.scalar_one_or_none()
 
 
 async def list_evaluations(db: AsyncSession) -> list[Evaluation]:
     """List all evaluations ordered by creation date."""
-    result = await db.execute(
-        select(Evaluation).order_by(Evaluation.created_at.desc())
-    )
+    result = await db.execute(select(Evaluation).order_by(Evaluation.created_at.desc()))
     return list(result.scalars().all())
 
 
 async def get_question(db: AsyncSession, question_id: str) -> Question | None:
     """Get a question by ID."""
-    result = await db.execute(
-        select(Question).where(Question.id == question_id)
-    )
+    result = await db.execute(select(Question).where(Question.id == question_id))
     return result.scalar_one_or_none()
 
 
@@ -58,13 +52,9 @@ async def get_responses_for_evaluation(
     return list(result.scalars().all())
 
 
-async def get_scores_for_response(
-    db: AsyncSession, response_id: UUID
-) -> list[Score]:
+async def get_scores_for_response(db: AsyncSession, response_id: UUID) -> list[Score]:
     """Get all scores for a response."""
     result = await db.execute(
-        select(Score)
-        .where(Score.response_id == response_id)
-        .order_by(Score.dimension)
+        select(Score).where(Score.response_id == response_id).order_by(Score.dimension)
     )
     return list(result.scalars().all())

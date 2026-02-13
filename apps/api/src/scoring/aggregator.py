@@ -48,9 +48,7 @@ async def aggregate_scores(
 
     # Fetch all responses with their scores
     responses_result = await db.execute(
-        select(ResponseModel).where(
-            ResponseModel.evaluation_id == evaluation_id
-        )
+        select(ResponseModel).where(ResponseModel.evaluation_id == evaluation_id)
     )
     responses = list(responses_result.scalars().all())
     report.total_responses = len(responses)
@@ -88,12 +86,10 @@ async def aggregate_scores(
         resp = response_map.get(score.response_id)
         if not resp:
             continue
-        model_dim_scores[resp.model_name][score.dimension].append(
+        model_dim_scores[resp.model_name][score.dimension].append(score.value)
+        q_model_dim[resp.question_id][resp.model_name][score.dimension].append(
             score.value
         )
-        q_model_dim[resp.question_id][resp.model_name][
-            score.dimension
-        ].append(score.value)
 
     # Per-model averages by dimension
     for model, dims in model_dim_scores.items():
@@ -104,9 +100,7 @@ async def aggregate_scores(
             report.model_averages[model][dim] = round(avg, 2)
             all_values.extend(values)
         if all_values:
-            report.model_overall[model] = round(
-                sum(all_values) / len(all_values), 2
-            )
+            report.model_overall[model] = round(sum(all_values) / len(all_values), 2)
 
     # Per-dimension averages by model
     all_dimensions = set()

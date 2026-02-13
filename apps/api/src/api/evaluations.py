@@ -149,9 +149,7 @@ async def _run_evaluation_task(
                 await db.commit()
 
         except Exception:
-            logger.exception(
-                "Evaluation %s failed", evaluation_id
-            )
+            logger.exception("Evaluation %s failed", evaluation_id)
             eval_obj = await db.get(Evaluation, evaluation_id)
             if eval_obj:
                 eval_obj.status = "created"
@@ -268,10 +266,7 @@ async def get_next_unscored(
 
     # Find responses not yet scored by this user
     scored_subq = (
-        select(Score.response_id)
-        .where(Score.user_id == user.id)
-        .distinct()
-        .subquery()
+        select(Score.response_id).where(Score.user_id == user.id).distinct().subquery()
     )
 
     result = await db.execute(
@@ -292,9 +287,7 @@ async def get_next_unscored(
 
     # Group by question for side-by-side review
     question_id = unscored[0].question_id
-    question_responses = [
-        r for r in unscored if r.question_id == question_id
-    ]
+    question_responses = [r for r in unscored if r.question_id == question_id]
 
     # In blind mode, shuffle and hide model names
     is_blind = evaluation.review_mode == "blind"
@@ -385,9 +378,9 @@ async def get_review_progress(
 
     # Unique questions with responses
     questions_result = await db.execute(
-        select(
-            func.count(func.distinct(ResponseModel.question_id))
-        ).where(ResponseModel.evaluation_id == evaluation_id)
+        select(func.count(func.distinct(ResponseModel.question_id))).where(
+            ResponseModel.evaluation_id == evaluation_id
+        )
     )
     question_count = questions_result.scalar() or 0
 

@@ -48,18 +48,14 @@ async def call_model(
                 "model": model_config.litellm_model,
                 "provider": model_config.provider,
                 "prompt_tokens": usage.prompt_tokens if usage else None,
-                "completion_tokens": (
-                    usage.completion_tokens if usage else None
-                ),
+                "completion_tokens": (usage.completion_tokens if usage else None),
                 "total_tokens": usage.total_tokens if usage else None,
                 "latency_seconds": round(latency, 3),
             }
 
             # LiteLLM provides cost tracking
             if hasattr(response, "_hidden_params"):
-                cost = response._hidden_params.get(
-                    "response_cost"
-                )
+                cost = response._hidden_params.get("response_cost")
                 if cost is not None:
                     metadata["cost_usd"] = cost
 
@@ -95,8 +91,7 @@ async def call_model(
         last_error,
     )
     raise RuntimeError(
-        f"Model {model_config.name} failed after {MAX_RETRIES} attempts: "
-        f"{last_error}"
+        f"Model {model_config.name} failed after {MAX_RETRIES} attempts: {last_error}"
     )
 
 
@@ -129,9 +124,7 @@ async def run_evaluation(
             )
 
             try:
-                result = await call_model(
-                    model_config, question_text, prompt_template
-                )
+                result = await call_model(model_config, question_text, prompt_template)
                 response = ResponseModel(
                     id=uuid4(),
                     evaluation_id=evaluation_id,
