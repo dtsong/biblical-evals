@@ -74,8 +74,3 @@ variable "allow_unauthenticated" {
   default     = true
 }
 
-variable "depends_on_resources" {
-  description = "Resources that must be created before this service"
-  type        = list(any)
-  default     = []
-}

@@ -83,8 +83,6 @@ resource "google_cloud_run_v2_service" "this" {
     percent = 100
   }
 
-  depends_on = [var.depends_on_resources]
-
   lifecycle {
     ignore_changes = [
       client,

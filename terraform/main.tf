@@ -234,7 +234,7 @@ module "cloud_run" {
     }
   }
 
-  depends_on_resources = [
+  depends_on = [
     google_project_service.apis,
     google_project_iam_member.api_cloudsql,
     google_project_iam_member.api_secrets,
