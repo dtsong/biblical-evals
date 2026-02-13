@@ -1,0 +1,18 @@
+# Copy to biblical-evals-prod.tfvars (ignored by git) before phase-2 apply.
+
+project_id   = "biblical-evals-prod"
+region       = "us-west1"
+environment  = "prod"
+
+# Update to the new project's Artifact Registry path.
+api_image    = "us-west1-docker.pkg.dev/biblical-evals-prod/biblical-evals-api/api:latest"
+
+# Public web origin(s)
+cors_origins = "https://biblical-evals.vercel.app"
+
+# Sizing can be adjusted before first apply.
+db_tier      = "db-f1-micro"
+db_disk_size = 10
+
+# Keep in owner/repo format.
+github_repo  = "dtsong/biblical-evals"

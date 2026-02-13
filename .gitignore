@@ -43,6 +43,7 @@ htmlcov/
 *.tfstate
 *.tfstate.backup
 *.tfplan
+*.tfvars
 
 # Misc
 *.log
