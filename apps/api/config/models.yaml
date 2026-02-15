@@ -3,23 +3,43 @@ models:
     provider: openai
     litellm_model: gpt-4o
     api_key_env: OPENAI_API_KEY
+    tier: standard
+    cost_per_1k_input: 0.0025
+    cost_per_1k_output: 0.01
+    concurrency_limit: 5
 
   - name: gpt-4o-mini
     provider: openai
     litellm_model: gpt-4o-mini
     api_key_env: OPENAI_API_KEY
+    tier: economy
+    cost_per_1k_input: 0.00015
+    cost_per_1k_output: 0.0006
+    concurrency_limit: 10
 
   - name: claude-sonnet-4-5
     provider: anthropic
     litellm_model: claude-sonnet-4-5-20250929
     api_key_env: ANTHROPIC_API_KEY
+    tier: premium
+    cost_per_1k_input: 0.003
+    cost_per_1k_output: 0.015
+    concurrency_limit: 3
 
   - name: claude-haiku-3.5
     provider: anthropic
     litellm_model: claude-haiku-4-5-20251001
     api_key_env: ANTHROPIC_API_KEY
+    tier: economy
+    cost_per_1k_input: 0.0008
+    cost_per_1k_output: 0.004
+    concurrency_limit: 10
 
   - name: gemini-2.0-flash
     provider: google
     litellm_model: gemini/gemini-2.0-flash
     api_key_env: GOOGLE_AI_API_KEY
+    tier: economy
+    cost_per_1k_input: 0.0001
+    cost_per_1k_output: 0.0004
+    concurrency_limit: 10

@@ -7,6 +7,7 @@ import type {
   AccessStatus,
   AccessUser,
   Evaluation,
+  ModelInfo,
   ReviewData,
   ReviewProgress,
   Question,
@@ -181,6 +182,8 @@ export const reportsApi = {
 // --- Config ---
 
 export const configApi = {
+  models: () =>
+    fetchApiAuth<{ models: ModelInfo[] }>("/api/v1/config/models"),
   perspectives: () =>
     fetchApiAuth<{ perspectives: Perspective[] }>(
       "/api/v1/config/perspectives"

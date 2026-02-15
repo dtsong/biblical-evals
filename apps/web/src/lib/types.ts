@@ -66,8 +66,19 @@ export interface ScoringDimension {
   name: string;
   label: string;
   description: string;
+  category?: string;
   min_value: number;
   max_value: number;
+}
+
+export type ModelTier = "economy" | "standard" | "premium";
+
+export interface ModelInfo {
+  name: string;
+  provider: string;
+  tier: ModelTier;
+  cost_per_1k_input: number;
+  cost_per_1k_output: number;
 }
 
 export interface ModelRanking {
