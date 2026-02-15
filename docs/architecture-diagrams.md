@@ -132,7 +132,7 @@ flowchart TD
 
 ```mermaid
 flowchart LR
-  subgraph GCP["Google Cloud - trainerlab-prod"]
+  subgraph GCP["Google Cloud - biblical-evals-prod"]
     AR["Artifact Registry: biblical-evals-api"]
     SM["Secret Manager: NEXTAUTH and provider keys and DB password"]
     SA["Service Account: biblical-evals-api"]

@@ -39,7 +39,7 @@ if [[ -f "$ROOT_ENV" ]]; then
   set +a
 fi
 
-PROJECT_ID="${GCP_PROJECT_ID:-trainerlab-prod}"
+PROJECT_ID="${GCP_PROJECT_ID:-biblical-evals-prod}"
 REGION="${GCP_REGION:-us-west1}"
 
 # ---------------------------------------------------------------------------

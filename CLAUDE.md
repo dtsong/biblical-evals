@@ -9,7 +9,7 @@ Monorepo with two apps sharing auth via HS256 JWT (NEXTAUTH_SECRET):
 ```
 apps/web/    → Next.js 14 frontend (Vercel)
 apps/api/    → FastAPI backend (Cloud Run)
-terraform/   → GCP infrastructure (trainerlab-prod, temporary — see #2)
+terraform/   → GCP infrastructure (`biblical-evals-prod` target, issue #2)
 scripts/     → Developer tooling
 ```
 
@@ -108,9 +108,9 @@ ID prefixes: `SOT` (soteriology), `CHR` (christology), `BIB` (biblical knowledge
 
 ## Terraform Conventions
 
-- **Temporary home**: All resources in `trainerlab-prod` with `biblical-evals-*` prefixes (migration tracked in #2)
+- **Target home**: `biblical-evals-prod` with `biblical-evals-*` prefixes (migration tracked in #2)
 - **Modules**: `modules/cloud_run/` and `modules/cloud_sql/` — adapted from trainerlab patterns
-- **State**: GCS backend at `trainerlab-tfstate-1d22e2f5`, prefix `biblical-evals/app`
+- **State**: GCS backend now targets `biblical-evals-tfstate`, prefix `biblical-evals/app` (confirm final bucket after phase 1)
 - **Naming**: WIF pool `github-biblical-evals`, SA `gh-biblical-evals` (avoid collisions with trainerlab)
 - **Style**: Use `depends_on` at module level (not variable passthrough)
 

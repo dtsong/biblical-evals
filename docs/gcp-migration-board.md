@@ -16,8 +16,8 @@ Primary tracking issue: `#2`
 |---|---|---|---|
 | 0 | Readiness and controls | In progress (#3) | Freeze window, owners, go/no-go checklist |
 | 1 | Foundation project/network/bootstrap | Blocked (external repo, #4) | `biblical-evals-prod` project + VPC + state bucket live |
-| 2 | App terraform migration | Ready to start (#5) | App infra applied in new project with migrated state |
-| 3 | CI/CD cutover | Not started (#6) | Deploy workflow publishes to new project |
+| 2 | App terraform migration | In progress (#5) | App infra applied in new project with migrated state |
+| 3 | CI/CD cutover | In progress (#6) | Deploy workflow publishes to new project |
 | 4 | Data and secrets migration | Not started (#7) | DB + secrets migrated and validated |
 | 5 | Decommission temporary resources | Not started (#8) | No active dependency on `trainerlab-prod` |
 
@@ -28,7 +28,7 @@ Primary tracking issue: `#2`
 - [x] Add migration labels and priority on GitHub issue.
 - [x] Publish this runbook/task board in repo docs.
 - [x] Create per-phase execution issues (`#3` to `#8`).
-- [ ] Assign execution owners for each phase.
+- [x] Assign execution owners for each phase.
 - [ ] Define migration freeze window and communication plan.
 - [ ] Create go/no-go checklist and rollback owner sign-off.
 
@@ -47,19 +47,19 @@ Primary tracking issue: `#2`
 
 - [x] Add target tfvars template (`terraform/biblical-evals-prod.tfvars.example`).
 - [x] Add local preflight checker (`scripts/migration-preflight.sh`).
-- [ ] Update backend bucket to new state bucket.
-- [ ] Update remote_state to new foundation outputs.
-- [ ] Update `project_id` default to `biblical-evals-prod`.
-- [ ] Update `api_image` default to new Artifact Registry path.
-- [ ] Apply Cloud SQL settings: `availability_type=REGIONAL`, `point_in_time_recovery=true`, `backup_retention_days=14`.
-- [ ] Remove temporary labels/comments related to co-tenancy.
+- [x] Update backend bucket to new state bucket.
+- [x] Update remote_state to new foundation outputs.
+- [x] Update `project_id` default to `biblical-evals-prod`.
+- [x] Update `api_image` default to new Artifact Registry path.
+- [x] Apply Cloud SQL settings: `availability_type=REGIONAL`, `point_in_time_recovery=true`, `backup_retention_days=14`.
+- [x] Remove temporary labels/comments related to co-tenancy.
 - [ ] Run `terraform init -migrate-state`.
 - [ ] Run `terraform plan` and `terraform apply`.
 
 ### Phase 3 - CI/CD cutover
 
-- [ ] Update `.github/workflows/deploy-api.yml` `PROJECT_ID`.
-- [ ] Update `.github/workflows/deploy-api.yml` `ARTIFACT_REGISTRY`.
+- [x] Update `.github/workflows/deploy-api.yml` `PROJECT_ID`.
+- [x] Update `.github/workflows/deploy-api.yml` `ARTIFACT_REGISTRY`.
 - [ ] Update GitHub secret `GCP_PROJECT_NUMBER`.
 - [ ] Validate OIDC auth and deployment end-to-end.
 

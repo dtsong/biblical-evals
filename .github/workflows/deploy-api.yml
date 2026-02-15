@@ -16,12 +16,12 @@ concurrency:
   cancel-in-progress: false
 
 env:
-  # Temporary: hosted in trainerlab-prod while billing quota is resolved.
+  # Hosted in dedicated biblical-evals-prod project.
   # See: https://github.com/dtsong/biblical-evals/issues/2
-  PROJECT_ID: trainerlab-prod
+  PROJECT_ID: biblical-evals-prod
   REGION: us-west1
   SERVICE_NAME: biblical-evals-api
-  ARTIFACT_REGISTRY: us-west1-docker.pkg.dev/trainerlab-prod/biblical-evals-api
+  ARTIFACT_REGISTRY: us-west1-docker.pkg.dev/biblical-evals-prod/biblical-evals-api
 
 jobs:
   # =============================================================================

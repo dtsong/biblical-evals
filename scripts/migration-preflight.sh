@@ -5,6 +5,13 @@ set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "$0")/.." && pwd)"
 TF_DIR="$ROOT_DIR/terraform"
+TMP_DIR="${TMPDIR:-/tmp}/biblical-evals-tf-${USER:-user}-preflight"
+if [[ -z "${TF_DATA_DIR:-}" ]]; then
+  export TF_DATA_DIR="$TMP_DIR"
+  trap 'rm -rf "$TF_DATA_DIR"' EXIT
+fi
+
+mkdir -p "$TF_DATA_DIR"
 
 required_commands=(gh terraform)
 

@@ -124,5 +124,5 @@ GitHub Actions (`.github/workflows/ci.yml`) enforces:
 ## Deployment
 
 - API deploy workflow: `.github/workflows/deploy-api.yml`
-- Main target: Google Cloud Run (`trainerlab-prod`, `us-west1`)
+- Main target: Google Cloud Run (`biblical-evals-prod`, `us-west1`)
 - Canonical Vercel project: `biblical-evals-web` (repo should not be linked to a second Vercel project)
