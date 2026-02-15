@@ -80,6 +80,10 @@ async def call_model(
             return {
                 "response_text": response_text,
                 "metadata": metadata,
+                "prompt_tokens": metadata.get("prompt_tokens"),
+                "completion_tokens": metadata.get("completion_tokens"),
+                "cost_usd": metadata.get("cost_usd"),
+                "latency_seconds": metadata.get("latency_seconds"),
             }
 
         except Exception as e:
@@ -152,9 +156,14 @@ async def run_evaluation(
                     question_id=question_id,
                     model_name=model_config.name,
                     response_text=result["response_text"],
+                    prompt_tokens=result.get("prompt_tokens"),
+                    completion_tokens=result.get("completion_tokens"),
+                    cost_usd=result.get("cost_usd"),
+                    latency_seconds=result.get("latency_seconds"),
                     source="api",
                     raw_metadata=result["metadata"],
                 )
+                response.compute_response_length()
                 db.add(response)
                 responses.append(response)
 
