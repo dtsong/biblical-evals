@@ -209,6 +209,7 @@ async def test_reviews_submit_review_success_path():
     eval_id = uuid4()
     body = SimpleNamespace(
         response_id=response_id,
+        presentation_order=1,
         scores=[SimpleNamespace(dimension="accuracy", value=4, comment="good")],
     )
     user = SimpleNamespace(id=uuid4())

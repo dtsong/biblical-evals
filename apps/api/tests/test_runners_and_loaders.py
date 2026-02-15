@@ -1,5 +1,6 @@
 """Tests for runner retry behavior and loader helpers."""
 
+import asyncio
 from pathlib import Path
 from typing import Any, cast
 from uuid import uuid4
@@ -11,6 +12,7 @@ from src.runners import litellm_runner
 from src.runners.import_runner import ImportBatch, ImportedResponse, import_responses
 from tests.conftest import (
     FakeAsyncSession,
+    FakeExecuteResult,
     FakeLiteLLMChoice,
     FakeLiteLLMMessage,
     FakeLiteLLMResponse,
@@ -106,6 +108,9 @@ async def test_call_model_success_with_metadata(mock_litellm_acompletion: LiteLL
     assert result["response_text"] == "result"
     assert result["metadata"]["total_tokens"] == 30
     assert result["metadata"]["cost_usd"] == 0.01
+    assert result["metadata"]["rendered_prompt"] == "Q: What is grace?"
+    assert result["metadata"]["generation_params"]["temperature"] == 0.7
+    assert result["metadata"]["generation_params"]["max_tokens"] == 2048
 
 
 @pytest.mark.asyncio
@@ -167,3 +172,132 @@ async def test_run_evaluation_collects_successful_calls(
     assert len(results) == 4
     assert db.commits == 1
     assert len(db.refreshed) == 4
+
+
+@pytest.mark.asyncio
+async def test_run_evaluation_uses_cached_response_when_available(
+    monkeypatch: pytest.MonkeyPatch,
+):
+    called = {"count": 0}
+
+    async def fake_call_model(*_args, **_kwargs):
+        called["count"] += 1
+        return {"response_text": "fresh", "metadata": {"total_tokens": 12}}
+
+    monkeypatch.setattr(litellm_runner, "call_model", fake_call_model)
+
+    cached = type(
+        "Cached",
+        (),
+        {
+            "id": uuid4(),
+            "response_text": "cached",
+            "response_length_words": 1,
+            "response_length_chars": 6,
+            "prompt_tokens": 10,
+            "completion_tokens": 20,
+            "cost_usd": 0.01,
+            "latency_seconds": 0.2,
+            "raw_metadata": {"total_tokens": 30},
+        },
+    )()
+
+    db: Any = FakeAsyncSession(execute_results=[FakeExecuteResult(one=cached)])
+    results = await litellm_runner.run_evaluation(
+        db=db,
+        evaluation_id=uuid4(),
+        question_ids=["Q1"],
+        question_texts={"Q1": "text"},
+        model_configs=cast(Any, [type("MC", (), {"name": "m1"})()]),
+        prompt_template=cast(
+            Any,
+            type("Tpl", (), {"id": "default", "template": "Q: {question}"})(),
+        ),
+        use_cache=True,
+    )
+
+    assert called["count"] == 0
+    assert len(results) == 1
+    assert results[0].source == "cache"
+    assert results[0].cache_source_response_id == cached.id
+
+
+@pytest.mark.asyncio
+async def test_run_evaluation_calls_model_when_cache_misses(
+    monkeypatch: pytest.MonkeyPatch,
+):
+    called = {"count": 0}
+
+    async def fake_call_model(*_args, **_kwargs):
+        called["count"] += 1
+        return {"response_text": "fresh", "metadata": {"total_tokens": 12}}
+
+    monkeypatch.setattr(litellm_runner, "call_model", fake_call_model)
+
+    db: Any = FakeAsyncSession(execute_results=[FakeExecuteResult(one=None)])
+    results = await litellm_runner.run_evaluation(
+        db=db,
+        evaluation_id=uuid4(),
+        question_ids=["Q1"],
+        question_texts={"Q1": "text"},
+        model_configs=cast(Any, [type("MC", (), {"name": "m1"})()]),
+        prompt_template=cast(
+            Any,
+            type("Tpl", (), {"id": "default", "template": "Q: {question}"})(),
+        ),
+        use_cache=True,
+    )
+
+    assert called["count"] == 1
+    assert len(results) == 1
+    assert results[0].source == "api"
+
+
+@pytest.mark.asyncio
+async def test_run_evaluation_enforces_per_provider_concurrency_limit(
+    monkeypatch: pytest.MonkeyPatch,
+):
+    state = {"running": 0, "max_running": 0}
+    lock = asyncio.Lock()
+
+    async def fake_call_model(model_config: Any, _question_text: str, _template: Any):
+        async with lock:
+            state["running"] += 1
+            state["max_running"] = max(state["max_running"], state["running"])
+        await asyncio.sleep(0.01)
+        async with lock:
+            state["running"] -= 1
+        return {"response_text": model_config.name, "metadata": {"total_tokens": 1}}
+
+    monkeypatch.setattr(litellm_runner, "call_model", fake_call_model)
+
+    db: Any = FakeAsyncSession(execute_results=[FakeExecuteResult(one=None)] * 2)
+    results = await litellm_runner.run_evaluation(
+        db=db,
+        evaluation_id=uuid4(),
+        question_ids=["Q1"],
+        question_texts={"Q1": "text"},
+        model_configs=cast(
+            Any,
+            [
+                type(
+                    "MC",
+                    (),
+                    {"name": "m1", "provider": "openai", "concurrency_limit": 1},
+                )(),
+                type(
+                    "MC",
+                    (),
+                    {"name": "m2", "provider": "openai", "concurrency_limit": 1},
+                )(),
+            ],
+        ),
+        prompt_template=cast(
+            Any,
+            type("Tpl", (), {"id": "default", "template": "Q: {question}"})(),
+        ),
+        use_cache=True,
+    )
+
+    assert len(results) == 2
+    assert state["max_running"] == 1

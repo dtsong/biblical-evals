@@ -43,6 +43,7 @@ async def import_responses(
             evaluation_id=evaluation_id,
             question_id=item.question_id,
             model_name=item.model_name,
+            prompt_template_id=item.metadata.get("prompt_template_id", "default"),
             response_text=item.response_text,
             source="import",
             raw_metadata=item.metadata,

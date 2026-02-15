@@ -8,6 +8,7 @@ import pytest
 from fastapi import BackgroundTasks, HTTPException
 
 from src.api import config_routes, evaluations, reports, responses, reviews
+from src.config import get_settings
 from src.runners.import_runner import ImportBatch, ImportedResponse
 from tests.conftest import FakeAsyncSession, FakeExecuteResult
 
@@ -21,6 +22,7 @@ async def test_create_evaluation_sets_fields():
         scoring_dimensions=["accuracy"],
         model_list=["gpt-4o"],
         prompt_template="default",
+        use_cache=True,
         review_mode="blind",
     )
     db: Any = FakeAsyncSession()
@@ -120,6 +122,68 @@ async def test_get_next_unscored_returns_complete_when_none(
     assert payload["complete"] is True
 
 
+def test_deterministic_review_seed_varies_by_user(monkeypatch: pytest.MonkeyPatch):
+    get_settings.cache_clear()
+    monkeypatch.setenv("NEXTAUTH_SECRET", "test-secret")
+    get_settings.cache_clear()
+
+    evaluation_id = str(uuid4())
+    question_id = "Q1"
+    user_a = str(uuid4())
+    user_b = str(uuid4())
+
+    seed_a = evaluations._deterministic_shuffle_key(evaluation_id, question_id, user_a)
+    seed_b = evaluations._deterministic_shuffle_key(evaluation_id, question_id, user_b)
+    assert seed_a != seed_b
+
+
+@pytest.mark.asyncio
+async def test_get_next_unscored_blind_order_is_deterministic(
+    monkeypatch: pytest.MonkeyPatch,
+):
+    get_settings.cache_clear()
+    monkeypatch.setenv("NEXTAUTH_SECRET", "test-secret")
+    get_settings.cache_clear()
+
+    eval_obj = SimpleNamespace(review_mode="blind")
+
+    async def fake_get_eval(_db, _eid):
+        return eval_obj
+
+    monkeypatch.setattr(evaluations, "get_evaluation", fake_get_eval)
+
+    qid = "Q1"
+    r1 = SimpleNamespace(
+        id=uuid4(), question_id=qid, model_name="m1", response_text="a"
+    )
+    r2 = SimpleNamespace(
+        id=uuid4(), question_id=qid, model_name="m2", response_text="b"
+    )
+    r3 = SimpleNamespace(
+        id=uuid4(), question_id=qid, model_name="m3", response_text="c"
+    )
+
+    db: Any = FakeAsyncSession(
+        execute_results=[FakeExecuteResult(many=[r1, r2, r3])],
+        get_by_id={qid: SimpleNamespace(text="Question")},
+    )
+    user = SimpleNamespace(id=uuid4())
+    eid = uuid4()
+
+    first = await evaluations.get_next_unscored(eid, cast(Any, user), db)
+
+    db2: Any = FakeAsyncSession(
+        execute_results=[FakeExecuteResult(many=[r1, r2, r3])],
+        get_by_id={qid: SimpleNamespace(text="Question")},
+    )
+    second = await evaluations.get_next_unscored(eid, cast(Any, user), db2)
+
+    assert [r["response_id"] for r in first["responses"]] == [
+        r["response_id"] for r in second["responses"]
+    ]
+    assert [r["presentation_order"] for r in first["responses"]] == [1, 2, 3]
+
+
 @pytest.mark.asyncio
 async def test_submit_review_requires_comment_for_low_scores():
     response_id = uuid4()
@@ -127,6 +191,7 @@ async def test_submit_review_requires_comment_for_low_scores():
     user = SimpleNamespace(id=uuid4())
     body = SimpleNamespace(
         response_id=response_id,
+        presentation_order=1,
         scores=[SimpleNamespace(dimension="accuracy", value=2, comment="")],
     )
     db: Any = FakeAsyncSession(
@@ -151,6 +216,7 @@ async def test_submit_review_rejects_when_evaluation_completed():
     user = SimpleNamespace(id=uuid4())
     body = SimpleNamespace(
         response_id=response_id,
+        presentation_order=1,
         scores=[SimpleNamespace(dimension="accuracy", value=4, comment="good")],
     )
     db: Any = FakeAsyncSession(
@@ -185,6 +251,7 @@ async def test_submit_review_upserts_existing_score():
     )
     body = SimpleNamespace(
         response_id=response_id,
+        presentation_order=1,
         scores=[SimpleNamespace(dimension="accuracy", value=5, comment="revised")],
     )
     db: Any = FakeAsyncSession(

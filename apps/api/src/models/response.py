@@ -10,6 +10,7 @@ from pydantic import BaseModel, Field
 class ResponseSource(StrEnum):
     API = "api"
     IMPORT = "import"
+    CACHE = "cache"
 
 
 class LLMResponseCreate(BaseModel):
@@ -17,6 +18,7 @@ class LLMResponseCreate(BaseModel):
 
     question_id: str
     model_name: str
+    prompt_template_id: str = "default"
     response_text: str
     source: ResponseSource = ResponseSource.API
     raw_metadata: dict = Field(default_factory=dict)
@@ -29,6 +31,8 @@ class LLMResponse(BaseModel):
     evaluation_id: UUID
     question_id: str
     model_name: str
+    prompt_template_id: str
+    cache_source_response_id: UUID | None = None
     response_text: str
     source: ResponseSource
     raw_metadata: dict

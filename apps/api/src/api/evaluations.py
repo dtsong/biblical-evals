@@ -1,5 +1,7 @@
 """Evaluation API endpoints."""
 
+import hashlib
+import hmac
 import logging
 import random
 from typing import Annotated, Any
@@ -9,6 +11,7 @@ from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, status
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from src.config import get_settings
 from src.db.database import get_db
 from src.db.models import Evaluation, Question, Score
 from src.db.models import Response as ResponseModel
@@ -23,6 +26,22 @@ from src.runners.import_runner import ImportBatch, import_responses
 logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/api/v1/evaluations", tags=["evaluations"])
+
+
+def _review_shuffle_secret() -> str:
+    settings = get_settings()
+    if settings.nextauth_secret:
+        return settings.nextauth_secret
+    # In normal operation, auth requires NEXTAUTH_SECRET. Keep a stable fallback
+    # for local/unit tests where auth isn't exercised.
+    return "insecure-dev-secret"
+
+
+def _deterministic_shuffle_key(*parts: str) -> int:
+    secret = _review_shuffle_secret().encode("utf-8")
+    msg = ":".join(parts).encode("utf-8")
+    digest = hmac.new(secret, msg, hashlib.sha256).digest()
+    return int.from_bytes(digest[:8], "big")
 
 
 @router.post(
@@ -44,6 +63,7 @@ async def create_evaluation(
         scoring_dimensions=body.scoring_dimensions,
         model_list=body.model_list,
         prompt_template=body.prompt_template,
+        use_cache=body.use_cache,
         review_mode=body.review_mode,
         created_by=user.id,
     )
@@ -137,8 +157,10 @@ async def _run_evaluation_task(
 
         # Update status to running
         eval_obj = await db.get(Evaluation, evaluation_id)
+        use_cache = True
         if eval_obj:
             eval_obj.status = "running"
+            use_cache = bool(getattr(eval_obj, "use_cache", True))
             await db.commit()
 
         try:
@@ -149,6 +171,7 @@ async def _run_evaluation_task(
                 question_texts=question_texts,
                 model_configs=model_configs,
                 prompt_template=template,
+                use_cache=use_cache,
             )
             # Update status to reviewing
             eval_obj = await db.get(Evaluation, evaluation_id)
@@ -308,7 +331,13 @@ async def get_next_unscored(
     # In blind mode, shuffle and hide model names
     is_blind = evaluation.review_mode == "blind"
     if is_blind:
-        random.shuffle(question_responses)
+        seed = _deterministic_shuffle_key(
+            str(evaluation_id),
+            str(question_id),
+            str(user.id),
+        )
+        rng = random.Random(seed)  # noqa: S311
+        rng.shuffle(question_responses)
 
     labels = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
     items = []
@@ -318,6 +347,7 @@ async def get_next_unscored(
             "label": f"Response {labels[i]}" if is_blind else resp.model_name,
             "response_text": resp.response_text,
             "question_id": resp.question_id,
+            "presentation_order": i + 1,
         }
         if not is_blind:
             item["model_name"] = resp.model_name

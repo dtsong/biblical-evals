@@ -66,6 +66,9 @@ class Evaluation(Base, TimestampMixin):
     prompt_template: Mapped[str] = mapped_column(
         String(50), nullable=False, server_default=text("'default'")
     )
+    use_cache: Mapped[bool] = mapped_column(
+        sa.Boolean(), nullable=False, server_default=text("true")
+    )
     review_mode: Mapped[str] = mapped_column(
         String(20), nullable=False, server_default=text("'blind'")
     )
@@ -109,6 +112,12 @@ class Response(Base, TimestampMixin):
         ForeignKey("questions.id"), nullable=False, index=True
     )
     model_name: Mapped[str] = mapped_column(String(100), nullable=False)
+    prompt_template_id: Mapped[str] = mapped_column(
+        String(50), nullable=False, server_default=text("'default'")
+    )
+    cache_source_response_id: Mapped[UUID | None] = mapped_column(
+        ForeignKey("responses.id"), nullable=True, index=True
+    )
     response_text: Mapped[str] = mapped_column(Text, nullable=False)
     response_length_words: Mapped[int | None] = mapped_column(Integer, nullable=True)
     response_length_chars: Mapped[int | None] = mapped_column(Integer, nullable=True)
@@ -160,6 +169,7 @@ class Score(Base):
     comment: Mapped[str] = mapped_column(
         Text, nullable=False, server_default=text("''")
     )
+    presentation_order: Mapped[int | None] = mapped_column(Integer, nullable=True)
     scored_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now(), nullable=False
     )

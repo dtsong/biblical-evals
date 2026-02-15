@@ -51,6 +51,9 @@ class Settings(BaseSettings):
     google_api_key: str | None = None
     google_ai_api_key: str | None = None
 
+    # Runner
+    response_cache_ttl_days: int = 7
+
     @property
     def effective_google_api_key(self) -> str | None:
         """Return the canonical Google key, falling back to legacy name."""

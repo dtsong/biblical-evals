@@ -28,6 +28,7 @@ class EvaluationCreate(BaseModel):
     scoring_dimensions: list[str] = Field(default_factory=list)
     model_list: list[str] = Field(min_length=1)
     prompt_template: str = Field(default="default")
+    use_cache: bool = True
     review_mode: ReviewMode = ReviewMode.BLIND
 
 
@@ -41,6 +42,7 @@ class EvaluationResponse(BaseModel):
     scoring_dimensions: list[str]
     model_list: list[str]
     prompt_template: str
+    use_cache: bool
     review_mode: ReviewMode
     created_by: UUID
     created_at: datetime

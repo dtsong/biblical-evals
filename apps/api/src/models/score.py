@@ -29,6 +29,7 @@ class ReviewSubmission(BaseModel):
     """Submit scores for a response."""
 
     response_id: UUID
+    presentation_order: int = Field(ge=1)
     scores: list[Score]
 
 
@@ -41,6 +42,7 @@ class ScoreResponse(BaseModel):
     dimension: str
     value: int
     comment: str
+    presentation_order: int | None = None
     scored_at: datetime
 
     model_config = {"from_attributes": True}

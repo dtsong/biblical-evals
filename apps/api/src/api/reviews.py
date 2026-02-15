@@ -78,6 +78,7 @@ async def submit_review(
         if existing_score:
             existing_score.value = score_input.value
             existing_score.comment = score_input.comment
+            existing_score.presentation_order = body.presentation_order
             existing_score.scored_at = datetime.now(UTC)
             scores.append(existing_score)
         else:
@@ -88,6 +89,7 @@ async def submit_review(
                 dimension=score_input.dimension,
                 value=score_input.value,
                 comment=score_input.comment,
+                presentation_order=body.presentation_order,
             )
             db.add(score)
             scores.append(score)
