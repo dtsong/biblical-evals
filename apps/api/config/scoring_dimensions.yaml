@@ -36,6 +36,7 @@ dimensions:
 
   - name: denominational_alignment
     label: Denominational Alignment
+    category: perspective
     description: >
       How well does the response align with the evaluator's theological
       perspective? This is intentionally subjective and perspective-dependent.

@@ -8,6 +8,7 @@ from jinja2 import Environment, FileSystemLoader
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.db.repository import get_evaluation
+from src.loaders.config_loader import get_perspective_dimensions, load_app_config
 from src.scoring.aggregator import aggregate_scores
 from src.scoring.engine import identify_strengths_weaknesses, rank_models
 
@@ -32,7 +33,11 @@ async def generate_report_data(
     if not evaluation:
         raise ValueError(f"Evaluation {evaluation_id} not found")
 
-    report = await aggregate_scores(db, evaluation_id)
+    app_config = load_app_config()
+    perspective_dims = get_perspective_dimensions(app_config)
+    report = await aggregate_scores(
+        db, evaluation_id, perspective_dimensions=perspective_dims
+    )
     rankings = rank_models(report)
     strengths = identify_strengths_weaknesses(report)
 

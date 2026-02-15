@@ -20,6 +20,10 @@ class ModelConfig(BaseModel):
     provider: str
     litellm_model: str
     api_key_env: str
+    tier: str  # "economy" | "standard" | "premium"
+    cost_per_1k_input: float
+    cost_per_1k_output: float
+    concurrency_limit: int = 5
 
 
 class ModelsConfig(BaseModel):
@@ -115,3 +119,8 @@ def load_app_config(config_dir: Path = DEFAULT_CONFIG_DIR) -> AppConfig:
         len(config.templates),
     )
     return config
+
+
+def get_perspective_dimensions(config: AppConfig) -> set[str]:
+    """Return the set of dimension names categorized as 'perspective'."""
+    return {d.name for d in config.dimensions if d.category == "perspective"}

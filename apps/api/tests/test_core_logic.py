@@ -151,7 +151,7 @@ async def test_generate_report_data_returns_expected_shape(
     async def fake_get_eval(_db, _evaluation_id):
         return fake_eval
 
-    async def fake_aggregate(_db, _evaluation_id):
+    async def fake_aggregate(_db, _evaluation_id, **_kwargs):
         report = AggregatedReport()
         report.model_averages = {"m1": {"accuracy": 4.2}}
         report.model_overall = {"m1": 4.2}

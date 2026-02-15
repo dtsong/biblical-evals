@@ -20,6 +20,7 @@ class AggregatedReport:
         self.model_averages: dict[str, dict[str, float]] = {}
         self.model_overall: dict[str, float] = {}
         self.dimension_averages: dict[str, dict[str, float]] = {}
+        self.perspective_scores: dict[str, dict[str, float]] = {}
         self.head_to_head: dict[str, dict[str, dict[str, float]]] = {}
         self.question_scores: dict[str, dict[str, dict[str, float]]] = {}
         self.total_responses: int = 0
@@ -31,6 +32,7 @@ class AggregatedReport:
             "model_averages": self.model_averages,
             "model_overall": self.model_overall,
             "dimension_averages": self.dimension_averages,
+            "perspective_scores": self.perspective_scores,
             "head_to_head": self.head_to_head,
             "question_scores": self.question_scores,
             "total_responses": self.total_responses,
@@ -42,8 +44,20 @@ class AggregatedReport:
 async def aggregate_scores(
     db: AsyncSession,
     evaluation_id: UUID,
+    *,
+    perspective_dimensions: set[str] | None = None,
 ) -> AggregatedReport:
-    """Aggregate all scores for an evaluation into report data."""
+    """Aggregate all scores for an evaluation into report data.
+
+    Args:
+        db: Database session.
+        evaluation_id: The evaluation to aggregate.
+        perspective_dimensions: Dimension names to exclude from overall scores
+            and report separately (e.g. {"denominational_alignment"}).
+    """
+    if perspective_dimensions is None:
+        perspective_dimensions = set()
+
     report = AggregatedReport()
 
     # Fetch all responses with their scores
@@ -91,16 +105,24 @@ async def aggregate_scores(
             score.value
         )
 
-    # Per-model averages by dimension
+    # Per-model averages by dimension, with overall excluding perspective dims
     for model, dims in model_dim_scores.items():
         report.model_averages[model] = {}
-        all_values: list[int] = []
+        quality_values: list[int] = []
         for dim, values in dims.items():
             avg = sum(values) / len(values)
             report.model_averages[model][dim] = round(avg, 2)
-            all_values.extend(values)
-        if all_values:
-            report.model_overall[model] = round(sum(all_values) / len(all_values), 2)
+            if dim in perspective_dimensions:
+                # Report perspective dimensions separately per model
+                if dim not in report.perspective_scores:
+                    report.perspective_scores[dim] = {}
+                report.perspective_scores[dim][model] = round(avg, 2)
+            else:
+                quality_values.extend(values)
+        if quality_values:
+            report.model_overall[model] = round(
+                sum(quality_values) / len(quality_values), 2
+            )
 
     # Per-dimension averages by model
     all_dimensions = set()
@@ -116,13 +138,14 @@ async def aggregate_scores(
                     sum(values) / len(values), 2
                 )
 
-    # Head-to-head: for each pair of models, compare on each dimension
+    # Head-to-head: for each pair of models, compare on quality dimensions only
+    quality_dimensions = all_dimensions - perspective_dimensions
     models = list(model_dim_scores.keys())
     for i, model_a in enumerate(models):
         report.head_to_head[model_a] = {}
         for model_b in models[i + 1 :]:
             comparison: dict[str, float] = {}
-            for dim in all_dimensions:
+            for dim in quality_dimensions:
                 a_vals = model_dim_scores[model_a].get(dim, [])
                 b_vals = model_dim_scores[model_b].get(dim, [])
                 if a_vals and b_vals:
@@ -131,7 +154,7 @@ async def aggregate_scores(
                     comparison[dim] = round(a_avg - b_avg, 2)
             report.head_to_head[model_a][model_b] = comparison
 
-    # Per-question scores
+    # Per-question scores (all dimensions, including perspective)
     for q_id, models_data in q_model_dim.items():
         report.question_scores[q_id] = {}
         for model, dims in models_data.items():

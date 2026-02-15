@@ -12,6 +12,7 @@ class ScoreDimension(BaseModel):
     name: str
     label: str
     description: str
+    category: str = "quality"  # "quality" or "perspective"
     min_value: int = 1
     max_value: int = 5
 
