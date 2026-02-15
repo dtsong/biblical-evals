@@ -32,9 +32,13 @@ def test_load_app_config_with_partial_files(tmp_path: Path):
         "    provider: openai\n"
         "    litellm_model: openai/gpt-4o\n"
         "    api_key_env: OPENAI_API_KEY\n"
+        "    tier: standard\n"
+        "    cost_per_1k_input: 0.0025\n"
+        "    cost_per_1k_output: 0.01\n"
     )
     cfg = config_loader.load_app_config(tmp_path)
     assert len(cfg.models) == 1
+    assert cfg.models[0].tier == "standard"
     assert cfg.perspectives == []
     assert cfg.dimensions == []
     assert cfg.templates == []
@@ -57,6 +61,25 @@ async def test_import_responses_creates_rows():
     assert len(responses) == 1
     assert db.commits == 1
     assert len(db.refreshed) == 1
+
+
+@pytest.mark.asyncio
+async def test_import_responses_computes_length():
+    db: Any = FakeAsyncSession()
+    batch = ImportBatch(
+        responses=[
+            ImportedResponse(
+                question_id="SOT-001",
+                model_name="gpt-4o",
+                response_text="The quick brown fox jumps over the lazy dog",
+            )
+        ]
+    )
+
+    responses = await import_responses(db, uuid4(), batch)
+    resp = responses[0]
+    assert resp.response_length_words == 9
+    assert resp.response_length_chars == 43
 
 
 @pytest.mark.asyncio

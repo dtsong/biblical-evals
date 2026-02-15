@@ -1,13 +1,15 @@
 """Review/scoring API endpoints."""
 
+from datetime import UTC, datetime
 from typing import Annotated
 from uuid import uuid4
 
 from fastapi import APIRouter, Depends, HTTPException, status
-from sqlalchemy import select
+from sqlalchemy import and_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.db.database import get_db
+from src.db.models import Evaluation as EvaluationModel
 from src.db.models import Response as ResponseModel
 from src.db.models import Score as ScoreModel
 from src.dependencies.auth import CurrentUser
@@ -26,8 +28,8 @@ async def submit_review(
     user: CurrentUser,
     db: Annotated[AsyncSession, Depends(get_db)],
 ) -> list[ScoreModel]:
-    """Submit scores for a response."""
-    # Verify response exists
+    """Submit scores for a response (upsert semantics)."""
+    # Verify response exists and load its evaluation
     result = await db.execute(
         select(ResponseModel).where(ResponseModel.id == body.response_id)
     )
@@ -36,6 +38,17 @@ async def submit_review(
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Response not found",
+        )
+
+    # Check scoring lock: reject scores when evaluation is completed
+    eval_result = await db.execute(
+        select(EvaluationModel).where(EvaluationModel.id == response.evaluation_id)
+    )
+    evaluation = eval_result.scalar_one_or_none()
+    if evaluation and evaluation.status == "completed":
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="Scoring is locked: evaluation has been completed",
         )
 
     scores = []
@@ -50,16 +63,34 @@ async def submit_review(
                 ),
             )
 
-        score = ScoreModel(
-            id=uuid4(),
-            response_id=body.response_id,
-            user_id=user.id,
-            dimension=score_input.dimension,
-            value=score_input.value,
-            comment=score_input.comment,
+        # Upsert: update existing score or create new one
+        existing_result = await db.execute(
+            select(ScoreModel).where(
+                and_(
+                    ScoreModel.response_id == body.response_id,
+                    ScoreModel.user_id == user.id,
+                    ScoreModel.dimension == score_input.dimension,
+                )
+            )
         )
-        db.add(score)
-        scores.append(score)
+        existing_score = existing_result.scalar_one_or_none()
+
+        if existing_score:
+            existing_score.value = score_input.value
+            existing_score.comment = score_input.comment
+            existing_score.scored_at = datetime.now(UTC)
+            scores.append(existing_score)
+        else:
+            score = ScoreModel(
+                id=uuid4(),
+                response_id=body.response_id,
+                user_id=user.id,
+                dimension=score_input.dimension,
+                value=score_input.value,
+                comment=score_input.comment,
+            )
+            db.add(score)
+            scores.append(score)
 
     await db.commit()
     for s in scores:

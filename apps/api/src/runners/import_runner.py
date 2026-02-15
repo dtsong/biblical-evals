@@ -47,6 +47,7 @@ async def import_responses(
             source="import",
             raw_metadata=item.metadata,
         )
+        response.compute_response_length()
         db.add(response)
         responses.append(response)
 

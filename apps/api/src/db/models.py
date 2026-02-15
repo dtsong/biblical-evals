@@ -3,7 +3,8 @@
 from datetime import datetime
 from uuid import UUID
 
-from sqlalchemy import DateTime, ForeignKey, Integer, String, Text, func, text
+import sqlalchemy as sa
+from sqlalchemy import DateTime, ForeignKey, Integer, Numeric, String, Text, func, text
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -109,6 +110,12 @@ class Response(Base, TimestampMixin):
     )
     model_name: Mapped[str] = mapped_column(String(100), nullable=False)
     response_text: Mapped[str] = mapped_column(Text, nullable=False)
+    response_length_words: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    response_length_chars: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    prompt_tokens: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    completion_tokens: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    cost_usd: Mapped[float | None] = mapped_column(Numeric(10, 6), nullable=True)
+    latency_seconds: Mapped[float | None] = mapped_column(Numeric(8, 3), nullable=True)
     source: Mapped[str] = mapped_column(
         String(20), nullable=False, server_default=text("'api'")
     )
@@ -121,11 +128,25 @@ class Response(Base, TimestampMixin):
         back_populates="response", cascade="all, delete-orphan"
     )
 
+    def compute_response_length(self) -> None:
+        """Set word and character counts from response_text."""
+        if self.response_text:
+            self.response_length_chars = len(self.response_text)
+            self.response_length_words = len(self.response_text.split())
+        else:
+            self.response_length_chars = 0
+            self.response_length_words = 0
+
 
 class Score(Base):
     """A human reviewer's score for a single dimension of a response."""
 
     __tablename__ = "scores"
+    __table_args__ = (
+        sa.UniqueConstraint(
+            "response_id", "user_id", "dimension", name="uq_scores_response_user_dim"
+        ),
+    )
 
     id: Mapped[UUID] = mapped_column(primary_key=True)
     response_id: Mapped[UUID] = mapped_column(

@@ -123,18 +123,87 @@ async def test_get_next_unscored_returns_complete_when_none(
 @pytest.mark.asyncio
 async def test_submit_review_requires_comment_for_low_scores():
     response_id = uuid4()
+    eval_id = uuid4()
     user = SimpleNamespace(id=uuid4())
     body = SimpleNamespace(
         response_id=response_id,
         scores=[SimpleNamespace(dimension="accuracy", value=2, comment="")],
     )
     db: Any = FakeAsyncSession(
-        execute_results=[FakeExecuteResult(one=SimpleNamespace(id=response_id))]
+        execute_results=[
+            FakeExecuteResult(
+                one=SimpleNamespace(id=response_id, evaluation_id=eval_id)
+            ),
+            FakeExecuteResult(one=SimpleNamespace(id=eval_id, status="scoring")),
+        ]
     )
 
     with pytest.raises(HTTPException) as exc:
         await reviews.submit_review(cast(Any, body), cast(Any, user), db)
     assert exc.value.status_code == 422
+
+
+@pytest.mark.asyncio
+async def test_submit_review_rejects_when_evaluation_completed():
+    """Scoring is locked when evaluation status is 'completed'."""
+    response_id = uuid4()
+    eval_id = uuid4()
+    user = SimpleNamespace(id=uuid4())
+    body = SimpleNamespace(
+        response_id=response_id,
+        scores=[SimpleNamespace(dimension="accuracy", value=4, comment="good")],
+    )
+    db: Any = FakeAsyncSession(
+        execute_results=[
+            FakeExecuteResult(
+                one=SimpleNamespace(id=response_id, evaluation_id=eval_id)
+            ),
+            FakeExecuteResult(one=SimpleNamespace(id=eval_id, status="completed")),
+        ]
+    )
+
+    with pytest.raises(HTTPException) as exc:
+        await reviews.submit_review(cast(Any, body), cast(Any, user), db)
+    assert exc.value.status_code == 409
+
+
+@pytest.mark.asyncio
+async def test_submit_review_upserts_existing_score():
+    """Submitting a score for an already-scored dimension updates the existing score."""
+    response_id = uuid4()
+    eval_id = uuid4()
+    user_id = uuid4()
+    user = SimpleNamespace(id=user_id)
+    existing_score = SimpleNamespace(
+        id=uuid4(),
+        response_id=response_id,
+        user_id=user_id,
+        dimension="accuracy",
+        value=3,
+        comment="ok",
+        scored_at=None,
+    )
+    body = SimpleNamespace(
+        response_id=response_id,
+        scores=[SimpleNamespace(dimension="accuracy", value=5, comment="revised")],
+    )
+    db: Any = FakeAsyncSession(
+        execute_results=[
+            FakeExecuteResult(
+                one=SimpleNamespace(id=response_id, evaluation_id=eval_id)
+            ),
+            FakeExecuteResult(one=SimpleNamespace(id=eval_id, status="scoring")),
+            # Upsert check: existing score found
+            FakeExecuteResult(one=existing_score),
+        ]
+    )
+
+    saved = await reviews.submit_review(cast(Any, body), cast(Any, user), db)
+    assert len(saved) == 1
+    assert existing_score.value == 5
+    assert existing_score.comment == "revised"
+    # No new objects added (updated existing)
+    assert len(db.added) == 0
 
 
 @pytest.mark.asyncio

@@ -206,13 +206,23 @@ async def test_reports_get_and_generate_branches(monkeypatch: pytest.MonkeyPatch
 @pytest.mark.asyncio
 async def test_reviews_submit_review_success_path():
     response_id = uuid4()
+    eval_id = uuid4()
     body = SimpleNamespace(
         response_id=response_id,
         scores=[SimpleNamespace(dimension="accuracy", value=4, comment="good")],
     )
     user = SimpleNamespace(id=uuid4())
     db: Any = FakeAsyncSession(
-        execute_results=[FakeExecuteResult(one=SimpleNamespace(id=response_id))]
+        execute_results=[
+            # 1: response lookup
+            FakeExecuteResult(
+                one=SimpleNamespace(id=response_id, evaluation_id=eval_id)
+            ),
+            # 2: evaluation lock check (status != completed)
+            FakeExecuteResult(one=SimpleNamespace(id=eval_id, status="scoring")),
+            # 3: upsert check (no existing score)
+            FakeExecuteResult(one=None),
+        ]
     )
 
     saved = await reviews.submit_review(cast(Any, body), cast(Any, user), db)
