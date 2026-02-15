@@ -69,7 +69,7 @@ jobs:
 
   api-test:
     runs-on: ubuntu-latest
-    needs: [changes, api-lint]
+    needs: changes
     if: needs.changes.outputs.api == 'true'
     defaults:
       run:
@@ -170,3 +170,60 @@ jobs:
 
       - name: Terraform validate
         run: terraform validate
+
+  # =============================================================================
+  # CI Status - Aggregate job for branch protection
+  # =============================================================================
+  ci-status:
+    runs-on: ubuntu-latest
+    needs: [changes, api-lint, api-test, web-checks, terraform-validate]
+    if: always()
+    steps:
+      - name: Evaluate required jobs
+        env:
+          API_CHANGED: ${{ needs.changes.outputs.api }}
+          WEB_CHANGED: ${{ needs.changes.outputs.web }}
+          TERRAFORM_CHANGED: ${{ needs.changes.outputs.terraform }}
+
+          API_LINT_RESULT: ${{ needs.api-lint.result }}
+          API_TEST_RESULT: ${{ needs.api-test.result }}
+          WEB_CHECKS_RESULT: ${{ needs.web-checks.result }}
+          TERRAFORM_VALIDATE_RESULT: ${{ needs.terraform-validate.result }}
+        run: |
+          set -euo pipefail
+
+          fail=0
+
+          require_success_when_changed() {
+            local name="$1"
+            local changed="$2"
+            local result="$3"
+
+            if [ "$changed" = "true" ]; then
+              if [ "$result" != "success" ]; then
+                echo "::error::${name} required but result=${result}"
+                fail=1
+              fi
+            else
+              # When not changed, the job is expected to be skipped.
+              if [ "$result" != "skipped" ] && [ "$result" != "success" ]; then
+                echo "::error::${name} unexpected result=${result}"
+                fail=1
+              fi
+            fi
+          }
+
+          echo "Changes: api=${API_CHANGED} web=${WEB_CHANGED} terraform=${TERRAFORM_CHANGED}"
+          echo "Results: api-lint=${API_LINT_RESULT} api-test=${API_TEST_RESULT} web-checks=${WEB_CHECKS_RESULT} terraform-validate=${TERRAFORM_VALIDATE_RESULT}"
+
+          require_success_when_changed "api-lint" "$API_CHANGED" "$API_LINT_RESULT"
+          require_success_when_changed "api-test" "$API_CHANGED" "$API_TEST_RESULT"
+          require_success_when_changed "web-checks" "$WEB_CHANGED" "$WEB_CHECKS_RESULT"
+          require_success_when_changed "terraform-validate" "$TERRAFORM_CHANGED" "$TERRAFORM_VALIDATE_RESULT"
+
+          if [ "$fail" -ne 0 ]; then
+            echo "CI status: failed"
+            exit 1
+          fi
+
+          echo "CI status: ok"
