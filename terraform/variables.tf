@@ -1,7 +1,7 @@
 variable "project_id" {
-  description = "GCP project ID (temporarily trainerlab-prod)"
+  description = "GCP project ID"
   type        = string
-  default     = "trainerlab-prod"
+  default     = "biblical-evals-prod"
 }
 
 variable "region" {
@@ -24,7 +24,7 @@ variable "environment" {
 variable "api_image" {
   description = "Container image URI for the API"
   type        = string
-  default     = "us-west1-docker.pkg.dev/trainerlab-prod/biblical-evals-api/api:latest"
+  default     = "us-west1-docker.pkg.dev/biblical-evals-prod/biblical-evals-api/api:latest"
 }
 
 variable "cors_origins" {
