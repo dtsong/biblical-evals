@@ -48,6 +48,13 @@ resource "google_service_account_iam_member" "github_workload_identity" {
   member             = "principalSet://iam.googleapis.com/${google_iam_workload_identity_pool.github.name}/attribute.repository/${var.github_repo}"
 }
 
+# Generate access tokens (needed for docker/login-action with WIF)
+resource "google_service_account_iam_member" "github_token_creator" {
+  service_account_id = google_service_account.github_actions.name
+  role               = "roles/iam.serviceAccountTokenCreator"
+  member             = "principalSet://iam.googleapis.com/${google_iam_workload_identity_pool.github.name}/attribute.repository/${var.github_repo}"
+}
+
 # Artifact Registry push
 resource "google_project_iam_member" "github_registry" {
   project = var.project_id
