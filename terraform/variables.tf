@@ -72,11 +72,7 @@ variable "uptime_check_path" {
 variable "uptime_check_regions" {
   description = "Cloud Monitoring uptime check regions"
   type        = list(string)
-  default = [
-    "USA",
-    "USA_OREGON",
-    "USA_CALIFORNIA",
-  ]
+  default = ["USA"]
 }
 
 variable "alert_notification_emails" {

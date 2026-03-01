@@ -195,8 +195,9 @@ module "cloud_run" {
   service_name = "biblical-evals-api"
   image        = var.api_image
 
-  service_account_email = google_service_account.api.email
-  subnet_id             = local.subnet_id
+  service_account_email    = google_service_account.api.email
+  subnet_id                = local.subnet_id
+  allow_unauthenticated    = false
 
   env_vars = {
     ENVIRONMENT  = var.environment
